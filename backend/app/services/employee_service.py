@@ -144,6 +144,15 @@ class EmployeeService:
 
         update_data = emp_in.model_dump(exclude_unset=True)
 
+        if "email" in update_data and update_data["email"] is not None:
+            new_email = update_data["email"]
+            if new_email != employee.user.email:
+                existing = user_repo.get_by_email(db, email=new_email)
+                if existing:
+                    raise HTTPException(status_code=409, detail="A user with this email already exists.")
+                employee.user.email = new_email
+            del update_data["email"]
+
         if "department_id" in update_data and update_data["department_id"] is not None:
             dept = db.query(Department).filter(Department.id == update_data["department_id"]).first()
             if not dept:
@@ -182,6 +191,16 @@ class EmployeeService:
             raise HTTPException(status_code=404, detail="Employee profile not found for current user")
 
         update_data = emp_in.model_dump(exclude_unset=True)
+
+        if "email" in update_data and update_data["email"] is not None:
+            new_email = update_data["email"]
+            if new_email != employee.user.email:
+                existing = user_repo.get_by_email(db, email=new_email)
+                if existing:
+                    raise HTTPException(status_code=409, detail="A user with this email already exists.")
+                employee.user.email = new_email
+            del update_data["email"]
+
         employee_repo.update(db, db_obj=employee, obj_in=update_data)
 
         audit = AuditLog(

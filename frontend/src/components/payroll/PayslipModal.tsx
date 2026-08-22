@@ -1,4 +1,4 @@
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { type Payroll } from '@/services/payroll';
 import { Printer, X, FileText, Clock, DollarSign, Calendar } from 'lucide-react';
@@ -26,29 +26,29 @@ export default function PayslipModal({ payroll, isOpen, onClose }: PayslipModalP
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 overflow-y-auto">
             <Card className="w-full max-w-2xl bg-white border-slate-200 shadow-2xl overflow-hidden rounded-xl animate-in fade-in zoom-in duration-200 my-8">
                 {/* Modal Header */}
-                <CardHeader className="bg-slate-900 text-white p-6 flex flex-row items-center justify-between space-y-0 print:hidden">
-                    <CardTitle className="text-lg font-bold text-white flex items-center space-x-2">
-                        <FileText className="w-5 h-5 text-emerald-400" />
+                <div className="bg-[#0052FF] text-white p-5 flex flex-row items-center justify-between space-y-0 print:hidden rounded-t-xl">
+                    <h3 className="text-base font-bold text-white flex items-center space-x-2">
+                        <FileText className="w-5 h-5 text-blue-100" />
                         <span>Employee Payslip — {monthStr} {payroll.year}</span>
-                    </CardTitle>
+                    </h3>
                     <div className="flex items-center space-x-2">
                         <Button 
                             variant="outline" 
                             size="sm" 
                             onClick={() => window.print()} 
-                            className="bg-slate-800 border-slate-700 text-slate-200 hover:bg-slate-700 hover:text-white text-xs font-semibold space-x-1.5 h-8"
+                            className="bg-white/10 border-white/20 text-white hover:bg-white/20 hover:text-white text-xs font-semibold space-x-1.5 h-8 rounded-lg"
                         >
                             <Printer className="w-3.5 h-3.5" />
                             <span>Print</span>
                         </Button>
                         <button 
                             onClick={onClose}
-                            className="text-slate-400 hover:text-white transition-colors p-1 rounded-md"
+                            className="text-blue-100 hover:text-white transition-colors p-1.5 rounded-lg hover:bg-white/10"
                         >
                             <X className="w-5 h-5" />
                         </button>
                     </div>
-                </CardHeader>
+                </div>
 
                 {/* Printable Payslip Body */}
                 <CardContent className="p-8 space-y-6">

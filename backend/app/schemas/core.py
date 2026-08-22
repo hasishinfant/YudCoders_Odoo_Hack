@@ -83,6 +83,7 @@ class EmployeeCreateAdmin(BaseModel):
 class EmployeeUpdate(BaseModel):
     first_name: Optional[str] = None
     last_name: Optional[str] = None
+    email: Optional[EmailStr] = None
     phone: Optional[str] = None
     address: Optional[str] = None
     job_title: Optional[str] = None
@@ -103,6 +104,7 @@ class EmployeeUpdate(BaseModel):
 class EmployeeUpdateSelf(BaseModel):
     first_name: Optional[str] = None
     last_name: Optional[str] = None
+    email: Optional[EmailStr] = None
     phone: Optional[str] = None
     address: Optional[str] = None
     avatar_url: Optional[str] = None

@@ -1,6 +1,6 @@
 import { useState, type FormEvent, type ChangeEvent } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { refuseLeaveRequest } from '@/services/leave';
 import { AlertCircle, X, XCircle } from 'lucide-react';
 
@@ -13,7 +13,7 @@ interface RefuseLeaveModalProps {
 }
 
 export default function RefuseLeaveModal({ requestId, employeeName, isOpen, onClose, onSuccess }: RefuseLeaveModalProps) {
-    const [reason, setReason] = useState('');
+    const [comment, setComment] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
@@ -22,15 +22,10 @@ export default function RefuseLeaveModal({ requestId, employeeName, isOpen, onCl
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
         setError('');
-
-        if (!reason.trim()) {
-            setError('Refusal reason is required.');
-            return;
-        }
-
         setLoading(true);
+
         try {
-            await refuseLeaveRequest(requestId, reason.trim());
+            await refuseLeaveRequest(requestId, comment);
             onSuccess();
             onClose();
         } catch (err: any) {
@@ -43,18 +38,18 @@ export default function RefuseLeaveModal({ requestId, employeeName, isOpen, onCl
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
             <Card className="w-full max-w-md bg-white border-slate-200 shadow-2xl overflow-hidden rounded-xl animate-in fade-in zoom-in duration-200">
-                <CardHeader className="bg-red-900 text-white p-5 flex flex-row items-center justify-between space-y-0">
-                    <CardTitle className="text-lg font-bold text-white flex items-center space-x-2">
-                        <XCircle className="w-5 h-5 text-red-300" />
+                <div className="bg-red-600 text-white p-5 flex flex-row items-center justify-between space-y-0 rounded-t-xl">
+                    <h3 className="text-base font-bold text-white flex items-center space-x-2">
+                        <XCircle className="w-5 h-5 text-red-100" />
                         <span>Refuse Leave Request</span>
-                    </CardTitle>
+                    </h3>
                     <button 
                         onClick={onClose}
-                        className="text-red-200 hover:text-white transition-colors p-1 rounded-md"
+                        className="text-red-100 hover:text-white transition-colors p-1.5 rounded-lg hover:bg-white/10"
                     >
-                        <X className="w-5 h-5" />
+                        <X className="w-4.5 h-4.5" />
                     </button>
-                </CardHeader>
+                </div>
 
                 <CardContent className="p-6 space-y-4">
                     <p className="text-xs text-slate-600 font-medium">
@@ -74,11 +69,11 @@ export default function RefuseLeaveModal({ requestId, employeeName, isOpen, onCl
                                 Refusal Reason <span className="text-red-500">*</span>
                             </label>
                             <textarea
-                                className="w-full p-3 text-xs border rounded-md border-slate-200 focus:outline-none focus:ring-2 focus:ring-red-500 font-sans"
+                                className="w-full p-3 text-xs border rounded-xl border-slate-200 focus:outline-none focus:ring-2 focus:ring-red-500 font-sans"
                                 rows={3}
                                 placeholder="Explain why this request is being refused..."
-                                value={reason}
-                                onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setReason(e.target.value)}
+                                value={comment}
+                                onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setComment(e.target.value)}
                                 required
                             />
                         </div>
@@ -88,13 +83,13 @@ export default function RefuseLeaveModal({ requestId, employeeName, isOpen, onCl
                                 type="button" 
                                 variant="outline" 
                                 onClick={onClose} 
-                                className="text-xs font-semibold"
+                                className="text-xs font-semibold rounded-xl h-10 px-4"
                             >
                                 Cancel
                             </Button>
                             <Button 
                                 type="submit" 
-                                className="bg-red-600 hover:bg-red-700 text-white font-bold text-xs px-5"
+                                className="bg-red-600 hover:bg-red-700 text-white font-bold text-xs px-5 rounded-xl h-10 shadow-md shadow-red-500/10 transition-colors"
                                 disabled={loading}
                             >
                                 {loading ? 'Refusing...' : 'Confirm Refusal'}
