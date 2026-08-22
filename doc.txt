@@ -1,0 +1,928 @@
+DAYFLOW
+Human Resource Management System
+FINAL PRODUCT + TECHNICAL + UI/UX + WIREFRAME + HACKATHON MASTER DOCUMENTATION
+Odoo Hackathon — Virtual Round
+Document purpose
+This is the final master specification for Dayflow. It defines what the product is, what must be built, how the UI should be structured, how the wireframes should map to screens, the architecture, database, APIs, validation, security, testing, Git collaboration, deployment, implementation phases and Odoo evaluation strategy.
+Source basis
+The Dayflow requirements define the HRMS scope: authentication, role-based access, profiles, attendance, leave, payroll visibility and approvals. The Odoo preparation guide defines the evaluation priorities: problem-solving, database design, architecture, CRUD, validation, UI/UX, security, testing, Git collaboration, technical ownership and meaningful AI use.
+Table of Contents
+1. Product Definition
+2. Problem Statement
+3. Product Goals
+4. User Roles & Permissions
+5. Functional Scope
+6. Product Modules
+7. Information Architecture
+8. UX/UI Design System
+9. Wireframe Specification
+10. Screen-by-Screen Product Specification
+11. User Journeys
+12. System Architecture
+13. Technology Stack
+14. Database Architecture
+15. API Architecture
+16. Authentication & Security
+17. Validation & Error Handling
+18. Notifications & Reporting
+19. Testing & Quality Assurance
+20. Git & Team Workflow
+21. Deployment Architecture
+22. Antigravity Build Instructions
+23. Implementation Roadmap
+24. Odoo Hackathon Evaluation Alignment
+25. Presentation & Live Demo
+26. Definition of Done
+27. Future Enhancements
+28. Final Product Rules
+1. Product Definition
+Product name: Dayflow
+Category: Human Resource Management System (HRMS)
+Primary users: Admin/HR Officer and Employee
+Core promise: Every workday, perfectly aligned.
+Dayflow centralizes employee information, attendance, leave, approvals and payroll visibility in one structured application.
+Product direction
+Dayflow should look and behave like a real business application, not a college prototype. Every visible metric should come from real application data once backend integration is complete.
+2. Problem Statement
+HR operations are often spread across separate processes for employee records, attendance, leave requests, approvals and salary information. This creates duplicated work, poor visibility and disconnected employee/HR workflows.
+Dayflow solves this by creating a centralized HR workspace with role-specific access and connected workflows.
+2.1 Core problem to demonstrate
+Employee → works → attendance is recorded
+Employee → needs time off → submits leave
+HR/Admin → reviews → approves/rejects
+Employee → views → updated status
+HR/Admin → manages → employee and payroll information
+3. Product Goals
+Digitize core HR operations.
+Provide secure role-based access.
+Give employees a simple self-service HR experience.
+Give HR/Admin users centralized management and approval tools.
+Maintain real relational data with clear relationships.
+Provide reliable CRUD workflows.
+Prevent unauthorized access to employee and payroll information.
+Provide a polished responsive interface.
+Make the architecture simple enough for every team member to explain.
+Meet the Odoo virtual-round engineering priorities before adding optional features.
+4. User Roles & Permissions
+Capability
+Employee
+Admin / HR
+Login / Logout
+Yes
+Yes
+View own profile
+Yes
+Yes
+Edit limited own profile
+Yes
+Yes
+Manage all employees
+No
+Yes
+View own attendance
+Yes
+Yes
+View all attendance
+No
+Yes
+Check-in / Check-out
+Yes
+As business rule
+Apply for leave
+Yes
+Optional/admin view
+Approve/reject leave
+No
+Yes
+View own payroll
+Read-only
+Yes
+Update salary structure
+No
+Yes
+View reports
+Own/permitted
+Organization
+Admin settings
+No
+Yes
+5. Functional Scope
+Module
+Required capability
+Authentication
+Sign up, sign in, validation, role-based access, email verification requirement.
+Employee Profile
+Personal details, job details, salary structure, documents, profile picture.
+Attendance
+Daily/weekly views, check-in/check-out, Present/Absent/Half-day/Leave.
+Leave
+Paid/Sick/Unpaid, date range, remarks, Pending/Approved/Rejected.
+Approvals
+HR/Admin review, approve/reject, comments, immediate status reflection.
+Payroll
+Employee read-only payroll; Admin/HR view and salary structure update.
+Dashboards
+Employee and Admin/HR dashboards with relevant summaries.
+Notifications
+Email/notification alerts as supported by implementation.
+Reports
+Attendance/salary analytics and reports as enhancement/supporting module.
+6. Product Modules
+6.1 Authentication
+Identity, credentials, JWT session and authorization.
+6.2 Employee Management
+Employee directory, profile and employee CRUD.
+6.3 Attendance
+Attendance capture, status and history.
+6.4 Leave Management
+Request, review, approve/reject and history.
+6.5 Payroll
+Salary structure and controlled payroll visibility.
+6.6 Notifications
+User alerts and workflow notifications.
+6.7 Reports
+Attendance/payroll summaries and future analytics.
+6.8 Audit
+Important administrative/security events.
+7. Information Architecture
+PUBLIC
+├── Login
+└── Registration
+EMPLOYEE
+├── Dashboard
+├── My Profile
+├── Attendance
+├── Leave
+├── Payroll
+├── Notifications
+└── Settings / Logout
+ADMIN / HR
+├── Dashboard
+├── Employees
+│   ├── Employee List
+│   ├── Add Employee
+│   └── Employee Profile
+├── Attendance
+├── Leave Approvals
+├── Payroll
+├── Reports
+├── Notifications
+└── Settings / Logout
+7.1 Navigation principle
+Navigation must change according to the user's role. Never expose admin-only navigation as functional access to employees.
+8. UX/UI Design System
+The final UI should follow a modern professional HR SaaS/dashboard visual language. The supplied Excalidraw design should be treated as the visual reference for the intended information layout; the implementation must preserve its core screen hierarchy while making the final UI polished and usable.
+8.1 Design principles
+Simple + polished is better than overloaded.
+Clear visual hierarchy.
+Consistent spacing and typography.
+Primary actions must be obvious.
+Tables must be readable.
+Forms must provide immediate validation.
+Every async operation needs loading/success/error feedback.
+Responsive layout.
+Do not use decorative animation when it does not improve usability.
+8.2 Recommended visual language
+Element
+Direction
+Brand
+Dayflow — professional HR/productivity identity.
+Layout
+Left sidebar + top header + content workspace for desktop.
+Cards
+Subtle borders, restrained shadows, clear KPI hierarchy.
+Tables
+Search/filter toolbar, readable columns, row actions.
+Forms
+Grouped sections, labels above controls, inline errors.
+Buttons
+Primary for main action; secondary for alternatives; destructive confirmation.
+Status
+Consistent Present/Absent/Leave/Pending/Approved/Rejected treatment.
+Charts
+Minimal, readable, business-focused.
+Mobile
+Collapse sidebar and stack cards/tables appropriately.
+9. Wireframe Specification
+Wireframes are functional layout blueprints, not final visual styling. Antigravity must first implement the information hierarchy, then apply the final design system.
+9.1 Login wireframe
+┌───────────────────────────────────────────────┐
+│                    DAYFLOW                    │
+│                                               │
+│             Welcome back                     │
+│                                               │
+│ Email                                         │
+│ [____________________________________]        │
+│                                               │
+│ Password                                      │
+│ [____________________________________]        │
+│                                               │
+│              [ Sign In ]                      │
+│                                               │
+│ Forgot password?     Create account           │
+│                                               │
+└───────────────────────────────────────────────┘
+9.2 Employee dashboard wireframe
+┌──── Sidebar ────┬─────────────────────────────────────────┐
+│ Dayflow          │ Topbar: Search | Notifications | User  │
+│ Dashboard        ├─────────────────────────────────────────┤
+│ My Profile       │ Good morning, Employee                 │
+│ Attendance       │                                         │
+│ Leave            │ [Attendance] [Leave] [Payroll] [Alerts]│
+│ Payroll          │                                         │
+│ Notifications    │ Attendance / recent activity            │
+│ Logout            │                                         │
+└──────────────────┴─────────────────────────────────────────┘
+9.3 Admin dashboard wireframe
+┌──── Sidebar ────┬─────────────────────────────────────────┐
+│ Dashboard        │ Admin / HR Dashboard                    │
+│ Employees        │                                         │
+│ Attendance       │ [Employees] [Present] [On Leave]       │
+│ Leave Approvals  │ [Pending Approvals] [Payroll]          │
+│ Payroll          │                                         │
+│ Reports          │ Attendance overview                     │
+│ Notifications    │ Pending leave requests                  │
+│ Settings         │ Recent HR activity                      │
+└──────────────────┴─────────────────────────────────────────┘
+9.4 Employee list wireframe
+Employees
+[ Search employee... ] [Department ▼] [Status ▼] [ + Add Employee ]
+┌──────────────────────────────────────────────────────────────┐
+│ Employee │ Department │ Job Title │ Status │ Actions        │
+├──────────────────────────────────────────────────────────────┤
+│ ...       │ ...        │ ...       │ ...    │ View / Edit   │
+└──────────────────────────────────────────────────────────────┘
+9.5 Leave approval wireframe
+Leave Requests
+[Pending] [Approved] [Rejected]
+┌──────────────────────────────────────────────────────────────┐
+│ Employee │ Type │ Dates │ Status │ Actions                  │
+├──────────────────────────────────────────────────────────────┤
+│ ...       │ Paid │ ...   │ Pending│ View | Approve | Reject│
+└──────────────────────────────────────────────────────────────┘
+Request Detail
+Employee: __________
+Leave type: __________
+Date range: __________
+Remarks: __________
+Comment: [________________________]
+[ Approve ]   [ Reject ]
+9.6 Attendance wireframe
+Attendance
+[ Today ] [ This Week ] [ Date Range ]
+Employee view:
+[ CHECK IN ] → [ CHECK OUT ]
+┌──────────────────────────────────────────────────────────────┐
+│ Date │ Check In │ Check Out │ Hours │ Status                 │
+├──────────────────────────────────────────────────────────────┤
+│ ...  │ ...      │ ...       │ ...   │ Present                │
+└──────────────────────────────────────────────────────────────┘
+9.7 Payroll wireframe
+Payroll
+Employee:
+┌────────────────────────────────────┐
+│ Basic Salary      ₹ ________       │
+│ Allowances        ₹ ________       │
+│ Deductions        ₹ ________       │
+│ Net Salary        ₹ ________       │
+└────────────────────────────────────┘
+Admin:
+[ Employee ▼ ] [ Effective Date ] [ Edit Salary Structure ]
+9.8 Profile wireframe
+Employee Profile
+[Profile Photo]  Name
+                 Employee ID
+                 Department
+                 Job Title
+Personal Information
+[ Full Name ] [ Email ]
+[ Phone     ] [ Address ]
+Job Information
+[ Department ] [ Job Title ]
+[ Join Date  ] [ Status ]
+Documents
+[ Document list / upload ]
+[ Edit Profile ]
+10. Screen-by-Screen Product Specification
+10.1 Login
+Email/password, validation, error state, role-aware redirect.
+10.2 Registration
+Employee ID, email, password, role, password rules, email verification requirement.
+10.3 Employee Dashboard
+Attendance action, leave summary, payroll shortcut, recent activity/alerts.
+10.4 Admin Dashboard
+Employee list access, attendance summary, leave approvals, payroll overview, recent activity.
+10.5 Employee Directory
+Search, filters, list, view/edit/create actions.
+10.6 Employee Profile
+Personal, job, salary, documents, profile picture; limited employee editing.
+10.7 Attendance
+Check-in/out, daily/weekly history, status.
+10.8 Leave
+Apply form for employee; request queue and detail/approval for HR.
+10.9 Payroll
+Read-only employee view; HR/Admin control.
+10.10 Reports
+Attendance/payroll summaries when implemented.
+10.11 Notifications
+Recent alerts and read/unread state.
+10.12 Settings
+Account/security preferences appropriate to role.
+11. User Journeys
+11.1 Employee daily journey
+Login
+ ↓
+Dashboard
+ ↓
+Check In
+ ↓
+Workday
+ ↓
+Check Out
+ ↓
+Attendance updated
+ ↓
+View history / notifications
+11.2 Employee leave journey
+Dashboard
+ ↓
+Leave
+ ↓
+Apply
+ ↓
+Select type + dates + remarks
+ ↓
+Submit
+ ↓
+PENDING
+ ↓
+HR decision
+ ↓
+APPROVED / REJECTED
+ ↓
+Employee sees updated status
+11.3 HR journey
+Login
+ ↓
+Admin Dashboard
+ ↓
+Leave Approvals
+ ↓
+Open request
+ ↓
+Review
+ ↓
+Approve / Reject + comment
+ ↓
+Status stored in DB
+ ↓
+Employee notified / record updated
+12. System Architecture
+                 DAYFLOW WEB APP
+                        │
+                React + TypeScript
+                        │
+                 HTTPS / REST JSON
+                        │
+                    FastAPI API
+                        │
+       ┌────────────────┼─────────────────┐
+       │                │                 │
+     Routers         Services          Security
+       │                │          JWT + RBAC
+       │                │                │
+       └────────────────┼────────────────┘
+                        │
+                    SQLAlchemy
+                        │
+                    PostgreSQL
+12.1 Backend package structure
+app
+├── core
+├── api
+│   ├── deps.py
+│   └── routes
+├── models
+├── schemas
+├── repositories
+├── services
+├── exceptions
+└── utils
+12.2 Frontend structure
+src/
+├── components/
+├── pages/
+├── layouts/
+├── services/
+├── hooks/
+├── routes/
+├── types/
+├── utils/
+└── assets/
+13. Technology Stack
+Layer
+Technology
+Reason / Responsibility
+Development agent
+Antigravity
+Primary AI-assisted development environment/workflow.
+Frontend
+React + TypeScript
+Structured, typed component UI.
+Styling
+Tailwind CSS
+Responsive design system.
+UI components
+shadcn/ui
+Reusable professional components.
+Charts
+Recharts
+Dashboard analytics when required.
+Backend
+Python 3.12+ + FastAPI
+Typed REST API and backend application layer.
+Security
+JWT + FastAPI security dependencies
+Authentication and backend role authorization.
+ORM
+SQLAlchemy 2.x + Alembic
+Relational persistence and versioned database migrations.
+Database
+PostgreSQL
+Real normalized relational database.
+Testing/API
+Postman + automated tests
+API and workflow verification.
+Version control
+Git + GitHub
+Team collaboration and traceability.
+Containers
+Docker
+Reproducible environment.
+DB tool
+pgAdmin
+Database administration.
+14. Database Architecture
+Table
+Important fields
+Relationships
+users
+id, employee_id, email, password_hash, role, email_verified
+1:1 employee; 1:N notifications/audit
+employees
+id, user_id, employee_code, department_id, name, phone, address, job_title
+N:1 department; 1:N attendance/leave/payroll/documents
+departments
+id, name
+1:N employees
+attendance
+id, employee_id, date, check_in, check_out, status
+N:1 employee
+leave_types
+id, name, paid
+1:N leave requests
+leave_requests
+id, employee_id, leave_type_id, dates, status, approver_id, comment
+N:1 employee/leave type
+payroll
+id, employee_id, effective_from, salary fields
+N:1 employee
+documents
+id, employee_id, type, file_reference
+N:1 employee
+notifications
+id, user_id, title, message, read_flag
+N:1 user
+audit_logs
+id, user_id, action, entity, entity_id, timestamp
+N:1 user
+14.1 ER relationship map
+Department 1 ──── N Employee
+User       1 ──── 1 Employee
+Employee   1 ──── N Attendance
+Employee   1 ──── N LeaveRequest
+LeaveType  1 ──── N LeaveRequest
+Employee   1 ──── N Payroll
+Employee   1 ──── N Document
+User       1 ──── N Notification
+User       1 ──── N AuditLog
+14.2 Data rules
+Unique email and employee code.
+Foreign keys prevent orphan records.
+One logical attendance record per employee/work date.
+Leave end date cannot precede start date.
+Employees cannot approve their own leave.
+Payroll access is role-protected.
+Use transactions for multi-step state changes.
+15. API Architecture
+Method
+Endpoint
+Purpose
+Access
+POST
+/api/auth/register
+Register
+Public
+POST
+/api/auth/login
+Login
+Public
+GET
+/api/employees
+List
+Admin/HR
+POST
+/api/employees
+Create
+Admin/HR
+GET
+/api/employees/{id}
+View
+Admin/HR / permitted self
+PUT
+/api/employees/{id}
+Update
+Admin/HR / permitted self fields
+DELETE
+/api/employees/{id}
+Delete/deactivate
+Admin/HR
+POST
+/api/attendance/check-in
+Check in
+Employee
+POST
+/api/attendance/check-out
+Check out
+Employee
+GET
+/api/attendance/me
+Own attendance
+Employee
+GET
+/api/attendance
+All attendance
+Admin/HR
+POST
+/api/leaves
+Apply leave
+Employee
+GET
+/api/leaves/me
+Own leaves
+Employee
+GET
+/api/leaves
+All requests
+Admin/HR
+PUT
+/api/leaves/{id}/approve
+Approve
+Admin/HR
+PUT
+/api/leaves/{id}/reject
+Reject
+Admin/HR
+GET
+/api/payroll/me
+Own payroll
+Employee
+GET
+/api/payroll
+All payroll
+Admin/HR
+PUT
+/api/payroll/{employeeId}
+Update salary
+Admin/HR
+15.1 Response standard
+{
+  "success": true,
+  "message": "Operation completed successfully",
+  "data": {},
+  "timestamp": "..."
+}
+15.2 Error standard
+{
+  "success": false,
+  "message": "Please enter a valid email address.",
+  "code": "VALIDATION_ERROR",
+  "timestamp": "..."
+}
+16. Authentication & Security
+Hash passwords; never store plaintext.
+Use JWT for authenticated API access.
+Enforce authorization at backend endpoints.
+Validate all request bodies.
+Do not expose sensitive fields in DTOs.
+Protect payroll and employee data.
+Use environment variables for secrets.
+Use HTTPS in deployment.
+Log important admin/security events.
+Never return stack traces to users.
+17. Validation & Error Handling
+Case
+Expected result
+Invalid email
+Inline error; API rejects invalid request.
+Empty required field
+Field-level validation.
+Duplicate email/employee ID
+Conflict/validation response.
+Invalid employee ID
+Not found response.
+Invalid leave date range
+Validation error.
+Unauthorized payroll
+Forbidden response.
+Expired JWT
+Authentication required again.
+Duplicate check-in
+Action rejected with clear message.
+Database failure
+Safe error to user; technical details logged.
+API/network failure
+Frontend retry/error state.
+18. Notifications & Reporting
+The source requirements mention email/notification alerts and analytics/reports such as salary slips or attendance reports. These are supporting features and should not delay the P0 core system.
+Feature
+MVP approach
+Later enhancement
+Notifications
+In-app status/alert feedback
+Persistent notification center + email.
+Attendance report
+Table/filter view
+Charts/export.
+Payroll report
+Salary structure view
+Salary slip generation/export.
+Leave alerts
+Status shown in app
+Email/push notification.
+19. Testing & Quality Assurance
+Test layer
+Scope
+Unit
+Business rules and validation.
+Integration
+PostgreSQL persistence and relationships.
+API
+Status codes, CRUD, auth and authorization.
+Frontend
+Forms, navigation, loading/error/empty states.
+End-to-end
+Login → attendance → leave → approval → payroll.
+Manual demo
+Happy path + invalid/unauthorized scenarios.
+19.1 Minimum demo test cases
+Employee login succeeds.
+Wrong password shows error.
+Employee check-in/out works.
+Employee cannot view another employee's payroll.
+Employee submits leave.
+HR approves/rejects leave.
+Status updates immediately.
+Admin CRUD works.
+Invalid data does not crash app.
+API/database failure has controlled error.
+20. Git & Team Workflow
+main
+develop
+feature/auth
+feature/employees
+feature/attendance
+feature/leave
+feature/payroll
+feature/dashboard
+feature/testing
+All members make meaningful commits.
+Use feature branches and merges.
+Use clear commit messages.
+Every member understands the whole architecture.
+No member should be the only person capable of running or explaining the project.
+21. Deployment Architecture
+Internet
+   ↓
+HTTPS / Domain
+   ↓
+Reverse Proxy / Nginx
+   ↓
+React Frontend
+   ↓
+FastAPI Backend
+   ↓
+PostgreSQL
+Keep secrets in environment variables.
+Never commit credentials.
+Use Docker for reproducible setup.
+Use versioned database migrations/schema changes.
+Provide backend health endpoint.
+Keep logs available for debugging.
+22. Antigravity Build Instructions
+This section is the direct execution contract for Antigravity.
+22.1 Build rules
+Read this document before creating code.
+Do not replace PostgreSQL with static JSON.
+Do not replace the backend with frontend-only logic.
+Do not add unnecessary third-party APIs.
+Do not add AI unless a specific approved HR use case is defined.
+Do not create fake dashboard metrics once APIs exist.
+Implement modules incrementally and keep the application runnable after each phase.
+Use reusable components rather than duplicated UI.
+Keep business rules in services, not controllers.
+Use DTOs and validation.
+Protect all sensitive endpoints.
+After each phase, test the feature before starting the next phase.
+22.2 Phase gates
+Phase
+Must be working before next phase
+1 Foundation
+Frontend, backend and PostgreSQL run; health endpoint works.
+2 Auth
+Registration/login, JWT and role protection work.
+3 Employees
+Employee CRUD + profile works using real DB.
+4 Attendance
+Check-in/out and history work.
+5 Leave
+Apply/approve/reject works.
+6 Payroll
+Role-controlled salary view/update works.
+7 Dashboards
+All metrics use APIs.
+8 Hardening
+Validation, errors, loading/empty states and security pass.
+9 Testing
+Critical end-to-end paths pass.
+10 Demo
+Architecture, DB and live workflow are explainable.
+22.3 Antigravity acceptance behavior
+When asked to implement a feature, Antigravity should identify: UI change → API endpoint → service rule → database change → validation → authorization → test → documentation/update. Do not implement only the visible frontend.
+23. Implementation Roadmap
+Phase
+Time
+Deliverables
+Foundation
+2–3h
+Repo, React, FastAPI, PostgreSQL, base architecture.
+Database
+3–5h
+Schema, constraints, relationships, seed data.
+Authentication
+3–4h
+Registration, login, JWT, RBAC.
+Employee
+3–4h
+CRUD, profile, search/filter.
+Attendance
+3–4h
+Check-in/out, daily/weekly.
+Leave
+3–4h
+Apply, approve/reject, comments.
+Payroll
+3–4h
+Salary visibility/control.
+Dashboards/UI
+4–6h
+Professional responsive screens.
+Hardening
+3–4h
+Validation, errors, security.
+Testing
+4–6h
+Integration, API, demo testing.
+Deployment/Git
+2–4h
+Docker, deployment, final merge.
+Complete polished estimate: approximately 40–55 focused hours. Hackathon MVP: approximately 8–12 focused hours if scope is restricted to P0.
+24. Odoo Hackathon Evaluation Alignment
+Evaluation focus
+How Dayflow addresses it
+Problem-solving ★★★★★
+Clear HR workflows and role-based business rules.
+Database design ★★★★★
+PostgreSQL, PK/FK relationships, normalization and constraints.
+Architecture ★★★★★
+React → REST → Controller → Service → Repository → DB.
+Attention to detail ★★★★★
+Validation, edge cases, authorization and error states.
+Coding standards ★★★★
+Typed frontend, layered backend, reusable components.
+UI/UX ★★★★
+Clean, responsive, consistent HR interface.
+Performance ★★★★
+Efficient queries, indexes and pagination.
+Scalability ★★★★
+Modular services and stateless API design.
+Security ★★★★
+JWT, RBAC, secure password hashing.
+Validation ★★★★
+Frontend + Pydantic validation + global exception handling.
+Debugging ★★★★
+Logs, Postman and controlled failures.
+Team collaboration ★★★★
+Feature branches and meaningful contributions.
+AI ★★★
+Only if genuinely valuable and explainable.
+What not to prioritize
+Do not spend core development time on random features, unnecessary AI, fancy animations, technologies added only for the PPT, or features nobody can explain.
+25. Presentation & Live Demo
+25.1 Recommended presentation flow
+Problem
+Architecture
+Database
+Backend
+Core Logic
+Frontend
+Validation
+Testing
+Scalability
+Live Demo
+25.2 Live demo sequence
+1. Login as Employee
+2. Employee dashboard
+3. Check in
+4. Submit leave
+5. Logout
+6. Login as HR/Admin
+7. Employee directory
+8. Attendance
+9. Leave approval
+10. Payroll
+11. Validation/error demonstration
+12. Explain API
+13. Explain DB relationship
+14. Explain scalability
+25.3 Questions the team must be ready for
+Why PostgreSQL?
+Why FastAPI?
+Why React/TypeScript?
+How does JWT authentication work?
+How do you enforce roles?
+How are employee/payroll relationships stored?
+How does leave approval change the database?
+What happens when an API fails?
+How do you prevent duplicate attendance?
+How do you prevent employees from accessing another employee's data?
+How is the application scalable?
+What did each team member build?
+Why did you not add unnecessary AI?
+26. Definition of Done
+✓ Real PostgreSQL database connected.
+✓ Real backend API connected.
+✓ Real CRUD operations work.
+✓ Frontend consumes real APIs.
+✓ Authentication works.
+✓ Role-based authorization works.
+✓ Employee CRUD works.
+✓ Attendance works.
+✓ Leave workflow works.
+✓ Payroll access works.
+✓ Validation works.
+✓ Error handling works.
+✓ Loading/empty/error states exist.
+✓ No major crash on demo path.
+✓ UI is polished and responsive.
+✓ Meaningful Git contributions exist for every member.
+✓ Every member can explain the architecture and their module.
+✓ Live demo works end-to-end.
+27. Future Enhancements
+Email notification system.
+Salary slip generation.
+Advanced reports and exports.
+Attendance analytics.
+Document management.
+Advanced permission hierarchy.
+Audit trail viewer.
+Optional HR analytics/AI only after defining a real business problem.
+Additional HR modules such as recruitment or performance management.
+28. Final Product Rules
+The following rules are final:
+Build a real software product, not a visual prototype.
+Use real database data.
+Keep the architecture modular and explainable.
+Finish core workflows before optional features.
+Validate all user input.
+Protect all sensitive operations with backend authorization.
+Keep the UI clean and consistent.
+Do not introduce technology just for appearance.
+Do not introduce AI without a genuine use case.
+Every team member must understand the final system.
+Use the wireframes as functional layout guidance and the supplied Excalidraw as a visual reference.
+Treat P0 hackathon requirements as higher priority than optional enhancements.
+FINAL TECHNOLOGY DECISION
+Frontend: React + TypeScript + Vite + Tailwind CSS + shadcn/ui
+Backend: Python 3.12+ + FastAPI + SQLAlchemy 2.x + Alembic + Pydantic
+Database: PostgreSQL
+Authentication: JWT + secure password hashing
+Development: Antigravity + Git/GitHub + Docker + Postman + pgAdmin
+Java and Spring Boot are NOT part of the final Dayflow implementation stack.
+This is an implementation choice. The Odoo Hackathon evaluation guide emphasizes real database design, working backend APIs, CRUD, validation, UI/UX, security, testing, team collaboration and explainable architecture; it does not mandate Java or Spring Boot.
+Source Notes
+This final documentation is based on the uploaded Dayflow — Human Resource Management System requirements and the uploaded Odoo Hackathon — Virtual Round Key Points & Saturday Preparation Guide.
+Dayflow requirements include authentication, role-based access, employee profile management, attendance, leave/time-off, payroll and approval workflows. The document also mentions email/notification alerts and analytics/reports.
+The Odoo guide emphasizes problem-solving, database design, minimizing third-party APIs, real dynamic data, validation, UI/UX, team participation, meaningful AI, coding understanding, Git contributions, working APIs/CRUD, security, testing and an explainable presentation. It does not mandate Java/Spring Boot.
+The Excalidraw file supplied with the project is treated as the visual wireframe/design reference. Where the visual file does not establish a technical rule, the technical sections above define the implementation contract.
+Prepared: 22 August 2026 — React + Python FastAPI final revision
