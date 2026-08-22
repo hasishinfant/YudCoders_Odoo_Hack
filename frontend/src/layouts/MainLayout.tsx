@@ -1,5 +1,5 @@
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Users, User, Clock, Calendar, LogOut } from 'lucide-react';
+import { LayoutDashboard, Users, User, Clock, Calendar, DollarSign, LogOut } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
 export default function MainLayout() {
@@ -18,6 +18,7 @@ export default function MainLayout() {
     { path: '/', label: 'Dashboard', icon: LayoutDashboard, show: true },
     { path: '/attendance', label: 'Attendance', icon: Clock, show: true },
     { path: '/time-off', label: 'Time Off', icon: Calendar, show: true },
+    { path: '/payroll', label: isAdmin ? 'Payroll' : 'Salary & Payslips', icon: DollarSign, show: true },
     { path: '/employees', label: 'Employees', icon: Users, show: isAdmin },
     { path: '/profile', label: 'My Profile', icon: User, show: true },
   ];

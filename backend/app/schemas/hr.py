@@ -4,6 +4,7 @@ from typing import Optional, List
 from decimal import Decimal
 from app.models.attendance import AttendanceStatusEnum
 from app.models.leave import LeaveStatusEnum
+from app.models.payroll import PayrollStatusEnum
 
 # Attendance Schemas
 class AttendanceBase(BaseModel):
@@ -101,21 +102,71 @@ class LeaveBalanceResponse(BaseModel):
     used_days: int
     remaining_days: int
 
-# Payroll Schemas
-class PayrollBase(BaseModel):
+# Salary Schemas
+class EmployeeSalaryBase(BaseModel):
+    basic_salary: Decimal = Field(..., ge=0)
+    allowances: Decimal = Field(Decimal('0.00'), ge=0)
+    deductions: Decimal = Field(Decimal('0.00'), ge=0)
     effective_from: date
-    basic_salary: Decimal
-    allowances: Decimal = Decimal('0.00')
-    deductions: Decimal = Decimal('0.00')
 
-class PayrollCreate(PayrollBase):
+class EmployeeSalaryCreate(BaseModel):
     employee_id: int
+    basic_salary: Decimal = Field(..., ge=0)
+    allowances: Decimal = Field(Decimal('0.00'), ge=0)
+    deductions: Decimal = Field(Decimal('0.00'), ge=0)
+    effective_from: Optional[date] = None
 
-class PayrollResponse(PayrollBase):
+class EmployeeSalaryUpdate(BaseModel):
+    basic_salary: Optional[Decimal] = Field(None, ge=0)
+    allowances: Optional[Decimal] = Field(None, ge=0)
+    deductions: Optional[Decimal] = Field(None, ge=0)
+    effective_from: Optional[date] = None
+
+class EmployeeSalaryResponse(BaseModel):
     id: int
     employee_id: int
+    basic_salary: Decimal
+    allowances: Decimal
+    gross_salary: Decimal
+    deductions: Decimal
     net_salary: Decimal
+    effective_from: date
     created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+# Payroll Schemas
+class PayrollGenerateRequest(BaseModel):
+    month: int = Field(..., ge=1, le=12)
+    year: int = Field(..., ge=2000, le=2100)
+    employee_id: Optional[int] = None
+
+class PayrollResponse(BaseModel):
+    id: int
+    employee_id: int
+    employee_name: Optional[str] = None
+    employee_code: Optional[str] = None
+    department_name: Optional[str] = None
+    month: int
+    year: int
+    period_start: date
+    period_end: date
+    basic_salary: Decimal
+    allowances: Decimal
+    gross_salary: Decimal
+    deductions: Decimal
+    net_salary: Decimal
+    status: PayrollStatusEnum
+    comment: Optional[str] = None
+    worked_hours: Optional[float] = None
+    approved_leave_days: Optional[int] = None
+    generated_at: datetime
+    processed_at: Optional[datetime] = None
+    paid_at: Optional[datetime] = None
+    created_at: datetime
+    updated_at: datetime
 
     class Config:
         from_attributes = True

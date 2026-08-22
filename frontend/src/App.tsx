@@ -8,6 +8,7 @@ import Employees from './pages/Employees';
 import EmployeeDetail from './pages/EmployeeDetail';
 import AttendancePage from './pages/Attendance';
 import TimeOffPage from './pages/TimeOff';
+import PayrollPage from './pages/Payroll';
 import { ProtectedRoute } from './routes/ProtectedRoute';
 
 function App() {
@@ -24,6 +25,7 @@ function App() {
               <Route index element={<Dashboard />} />
               <Route path="attendance" element={<AttendancePage />} />
               <Route path="time-off" element={<TimeOffPage />} />
+              <Route path="payroll" element={<PayrollPage />} />
               <Route path="profile" element={<EmployeeDetail isSelfProfile />} />
               
               {/* Admin Protected Routes */}

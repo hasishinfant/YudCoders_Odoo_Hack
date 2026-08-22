@@ -34,4 +34,5 @@ class Employee(Base):
     attendances = relationship("Attendance", back_populates="employee")
     leave_requests = relationship("LeaveRequest", back_populates="employee", foreign_keys="[LeaveRequest.employee_id]")
     payrolls = relationship("Payroll", back_populates="employee")
+    salary_config = relationship("EmployeeSalary", back_populates="employee", uselist=False)
     documents = relationship("Document", back_populates="employee")

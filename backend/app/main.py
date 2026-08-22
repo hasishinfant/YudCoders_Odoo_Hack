@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api.routes import health, auth, employees, departments, attendance, leave_types, leave_requests
+from app.api.routes import health, auth, employees, departments, attendance, leave_types, leave_requests, payroll
 
 app = FastAPI(
     title="Dayflow API",
@@ -24,6 +24,7 @@ app.include_router(departments.router, prefix="/api/departments", tags=["departm
 app.include_router(attendance.router, prefix="/api/attendance", tags=["attendance"])
 app.include_router(leave_types.router, prefix="/api/leave-types", tags=["leave-types"])
 app.include_router(leave_requests.router, prefix="/api/leave-requests", tags=["leave-requests"])
+app.include_router(payroll.router, prefix="/api/payroll", tags=["payroll"])
 
 @app.get("/")
 def read_root():
