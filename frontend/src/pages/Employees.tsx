@@ -20,7 +20,6 @@ import {
   List as ListIcon, 
   Mail, 
   Briefcase, 
-  ChevronRight,
   X,
   AlertCircle,
   CheckCircle2,

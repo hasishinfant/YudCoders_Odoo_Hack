@@ -605,13 +605,15 @@ export default function EmployeeDetail({ isSelfProfile = false }: EmployeeDetail
                                             ) : (
                                                 <div className="flex items-center justify-between p-2.5 bg-slate-50 border border-slate-200/80 rounded-xl">
                                                     <span className="text-xs font-bold text-slate-900">{nameDisplay}</span>
-                                                    <button 
-                                                        onClick={() => setEditingField('name')}
-                                                        className="text-[#0052FF] hover:bg-blue-50 border border-[#0052FF]/30 font-bold px-2.5 py-1 rounded-lg text-[11px] flex items-center space-x-1"
-                                                    >
-                                                        <Edit3 className="w-3 h-3" />
-                                                        <span>Edit</span>
-                                                    </button>
+                                                    {isSelfProfile && (
+                                                        <button 
+                                                            onClick={() => setEditingField('name')}
+                                                            className="text-[#0052FF] hover:bg-blue-50 border border-[#0052FF]/30 font-bold px-2.5 py-1 rounded-lg text-[11px] flex items-center space-x-1"
+                                                        >
+                                                            <Edit3 className="w-3 h-3" />
+                                                            <span>Edit</span>
+                                                        </button>
+                                                    )}
                                                 </div>
                                             )}
                                         </div>
@@ -632,13 +634,15 @@ export default function EmployeeDetail({ isSelfProfile = false }: EmployeeDetail
                                             ) : (
                                                 <div className="flex items-center justify-between p-2.5 bg-slate-50 border border-slate-200/80 rounded-xl">
                                                     <span className="text-xs font-bold text-slate-900 truncate pr-2">{addressDisplay}</span>
-                                                    <button 
-                                                        onClick={() => setEditingField('address')}
-                                                        className="text-[#0052FF] hover:bg-blue-50 border border-[#0052FF]/30 font-bold px-2.5 py-1 rounded-lg text-[11px] flex items-center space-x-1 shrink-0"
-                                                    >
-                                                        <Edit3 className="w-3 h-3" />
-                                                        <span>Edit</span>
-                                                    </button>
+                                                    {isSelfProfile && (
+                                                        <button 
+                                                            onClick={() => setEditingField('address')}
+                                                            className="text-[#0052FF] hover:bg-blue-50 border border-[#0052FF]/30 font-bold px-2.5 py-1 rounded-lg text-[11px] flex items-center space-x-1 shrink-0"
+                                                        >
+                                                            <Edit3 className="w-3 h-3" />
+                                                            <span>Edit</span>
+                                                        </button>
+                                                    )}
                                                 </div>
                                             )}
                                         </div>

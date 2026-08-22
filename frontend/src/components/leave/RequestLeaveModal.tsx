@@ -1,4 +1,4 @@
-import { useState, useMemo, type ChangeEvent, type FormEvent } from 'react';
+import { useState, useEffect, useMemo, type ChangeEvent, type FormEvent } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
@@ -10,12 +10,13 @@ interface RequestLeaveModalProps {
     isOpen: boolean;
     onClose: () => void;
     onSuccess: () => void;
+    defaultStartDate?: string;
 }
 
-export default function RequestLeaveModal({ leaveTypes, isOpen, onClose, onSuccess }: RequestLeaveModalProps) {
+export default function RequestLeaveModal({ leaveTypes, isOpen, onClose, onSuccess, defaultStartDate }: RequestLeaveModalProps) {
     const [leaveTypeId, setLeaveTypeId] = useState<number>(leaveTypes[0]?.id || 0);
-    const [startDate, setStartDate] = useState('');
-    const [endDate, setEndDate] = useState('');
+    const [startDate, setStartDate] = useState(defaultStartDate || '');
+    const [endDate, setEndDate] = useState(defaultStartDate || '');
     const [reason, setReason] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
@@ -29,6 +30,15 @@ export default function RequestLeaveModal({ leaveTypes, isOpen, onClose, onSucce
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
         return diffDays > 0 ? diffDays : 0;
     }, [startDate, endDate]);
+
+    useEffect(() => {
+        if (isOpen) {
+            setStartDate(defaultStartDate || '');
+            setEndDate(defaultStartDate || '');
+            setReason('');
+            setError('');
+        }
+    }, [isOpen, defaultStartDate]);
 
     if (!isOpen) return null;
 

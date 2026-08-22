@@ -4,25 +4,20 @@ import {
     getLeaveTypes,
     getMyLeaveRequests,
     getMyLeaveBalances,
-    cancelLeaveRequest,
     type LeaveType,
     type LeaveBalance,
     type LeaveRequest
 } from '@/services/leave';
-import LeaveBalanceCard from '@/components/leave/LeaveBalanceCard';
 import RequestLeaveModal from '@/components/leave/RequestLeaveModal';
-import { Button } from '@/components/ui/button';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { 
-    Plus, 
-    FileText
-} from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 export default function TimeOffPage() {
     useAuth();
 
     // Modals
     const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
+    const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+    const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
 
     // My Time Off State
     const [leaveTypes, setLeaveTypes] = useState<LeaveType[]>([]);
@@ -52,143 +47,104 @@ export default function TimeOffPage() {
         loadMyTimeOff();
     }, []);
 
-    const handleCancelRequest = async (id: number) => {
-        if (!confirm('Are you sure you want to cancel this leave request?')) return;
-        try {
-            await cancelLeaveRequest(id);
-            loadMyTimeOff();
-        } catch (err) {
-            console.error('Failed to cancel request', err);
-        }
+    const handleDayClick = (date: Date) => {
+        setSelectedDate(date);
+        setIsRequestModalOpen(true);
     };
 
-    const getStatusBadge = (status: string) => {
-        const base = 'text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md border';
-        switch (status) {
-            case 'APPROVED':
-                return <span className={`${base} bg-emerald-50 border-emerald-200 text-emerald-700`}>Approved</span>;
-            case 'REFUSED':
-                return <span className={`${base} bg-red-50 border-red-200 text-red-700`}>Refused</span>;
-            case 'CANCELLED':
-                return <span className={`${base} bg-slate-50 border-slate-200 text-slate-500`}>Cancelled</span>;
-            default:
-                return <span className={`${base} bg-amber-50 border-amber-200 text-amber-700`}>Pending</span>;
+    const renderMonth = (year: number, month: number) => {
+        const date = new Date(year, month, 1);
+        const monthName = date.toLocaleString('default', { month: 'long' });
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const startDay = date.getDay();
+        
+        const days = [];
+        for (let i = 0; i < startDay; i++) {
+            days.push(<div key={`empty-${i}`} className="h-6 w-6"></div>);
         }
+        for (let i = 1; i <= daysInMonth; i++) {
+            const currentDateStr = new Date(year, month, i).toISOString().split('T')[0];
+            const hasLeave = myRequests.some(r => r.start_date <= currentDateStr && r.end_date >= currentDateStr && r.status === 'APPROVED');
+            const hasPending = myRequests.some(r => r.start_date <= currentDateStr && r.end_date >= currentDateStr && r.status === 'PENDING');
+            
+            days.push(
+                <button 
+                    key={`day-${i}`} 
+                    onClick={() => handleDayClick(new Date(year, month, i))}
+                    className={`h-6 w-6 text-[10px] flex items-center justify-center rounded-full hover:bg-slate-700 transition-colors
+                        ${hasLeave ? 'bg-red-500 text-white font-bold' : hasPending ? 'bg-amber-500 text-white font-bold' : 'text-slate-300'}`}
+                >
+                    {i}
+                </button>
+            );
+        }
+
+        return (
+            <div key={month} className="p-4 border border-slate-700 rounded-xl bg-slate-900 shadow-sm">
+                <div className="text-center font-bold text-slate-200 text-xs mb-3">{monthName} {year}</div>
+                <div className="grid grid-cols-7 gap-1 text-center text-[9px] font-black text-slate-500 mb-2">
+                    <div>Su</div><div>Mo</div><div>Tu</div><div>We</div><div>Th</div><div>Fr</div><div>Sa</div>
+                </div>
+                <div className="grid grid-cols-7 gap-1 justify-items-center">
+                    {days}
+                </div>
+            </div>
+        );
     };
 
     return (
-        <div className="space-y-6 max-w-7xl mx-auto">
-            {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-200 pb-4 gap-4">
-                <div>
-                    <div className="flex items-center space-x-2">
-                        <h1 className="text-2xl font-black text-slate-900 tracking-tight">Time Off &amp; Leave Management</h1>
-                        <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-blue-100 text-[#0052FF]">
-                            EMPLOYEE CENTER
-                        </span>
-                    </div>
-                    <p className="text-xs text-slate-500 mt-1">Submit leave requests, view entitlement balances, and manage time off.</p>
-                </div>
+        <div className="max-w-6xl mx-auto space-y-6">
+            {/* Header Tabs */}
+            <div className="flex items-center space-x-1 border-b border-slate-700 bg-slate-900 px-4 pt-4 rounded-t-xl overflow-hidden">
+                <button className="px-6 py-2.5 text-xs font-bold rounded-t-lg transition-colors bg-slate-700 text-white">
+                    Time Off
+                </button>
+            </div>
 
-                <div className="flex items-center space-x-3 self-start sm:self-auto shrink-0">
-                    <Button 
-                        onClick={() => setIsRequestModalOpen(true)}
-                        className="bg-[#0052FF] hover:bg-blue-700 text-white font-black text-xs px-4 h-10 space-x-1.5 rounded-xl shadow-md shadow-blue-500/10"
+            <div className="bg-slate-900 rounded-b-xl rounded-tr-xl border border-slate-700 p-6 shadow-xl text-slate-200">
+                <div className="flex items-center justify-between mb-8">
+                    <button 
+                        onClick={() => { setSelectedDate(new Date()); setIsRequestModalOpen(true); }}
+                        className="bg-purple-600 hover:bg-purple-700 text-white font-bold px-5 py-2 rounded text-xs transition-colors shadow-lg shadow-purple-500/20"
                     >
-                        <Plus className="w-4 h-4 text-white" />
-                        <span>Request Time Off</span>
-                    </Button>
-                </div>
-            </div>
-
-            <div className="space-y-6">
-                {/* Leave Balances Grid */}
-                <div>
-                    <h2 className="text-xs font-black text-slate-400 uppercase tracking-wider mb-3">Available Leave Balances</h2>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                        {balances.map(b => (
-                            <LeaveBalanceCard key={b.leave_type_id} balance={b} />
-                        ))}
+                        NEW
+                    </button>
+                    <div className="flex items-center space-x-4 bg-slate-800 rounded-full px-4 py-1.5 border border-slate-700">
+                        <button onClick={() => setCurrentYear(y => y - 1)} className="p-1 hover:text-white text-slate-400"><ChevronLeft className="w-4 h-4" /></button>
+                        <span className="font-bold text-sm text-white min-w-[60px] text-center">{currentYear}</span>
+                        <button onClick={() => setCurrentYear(y => y + 1)} className="p-1 hover:text-white text-slate-400"><ChevronRight className="w-4 h-4" /></button>
                     </div>
                 </div>
 
-                {/* My Requests Table */}
-                <Card className="bg-white border-slate-200/80 rounded-2xl shadow-sm overflow-hidden">
-                    <CardHeader className="border-b border-slate-100 pb-4">
-                        <CardTitle className="text-base font-black text-slate-900">My Leave Requests</CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-0">
-                        {loadingMy ? (
-                            <div className="p-8 text-center text-slate-400">Loading leave requests...</div>
-                        ) : myRequests.length === 0 ? (
-                            <div className="p-12 text-center text-slate-500 space-y-2">
-                                <FileText className="w-8 h-8 text-slate-300 mx-auto" />
-                                <p className="font-semibold text-sm">No leave requests submitted yet</p>
-                            </div>
-                        ) : (
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-left text-xs border-collapse">
-                                    <thead>
-                                        <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold uppercase tracking-wider">
-                                            <th className="p-3.5 pl-6">Leave Type</th>
-                                            <th className="p-3.5">Dates</th>
-                                            <th className="p-3.5">Duration</th>
-                                            <th className="p-3.5">Reason</th>
-                                            <th className="p-3.5">Status</th>
-                                            <th className="p-3.5">HR Comment</th>
-                                            <th className="p-3.5 text-right pr-6">Action</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-slate-100 text-slate-700">
-                                        {myRequests.map(req => (
-                                            <tr key={req.id} className="hover:bg-slate-50/80 transition-colors">
-                                                <td className="p-3.5 pl-6 font-bold text-slate-900">
-                                                    {req.leave_type_name}
-                                                    <span className="block text-[10px] font-normal text-slate-400">
-                                                        {req.leave_type_paid ? 'Paid' : 'Unpaid'}
-                                                    </span>
-                                                </td>
-                                                <td className="p-3.5 font-medium">
-                                                    {req.start_date} <span className="text-slate-400">to</span> {req.end_date}
-                                                </td>
-                                                <td className="p-3.5 font-mono font-bold text-slate-900">
-                                                    {req.duration_days} {req.duration_days === 1 ? 'day' : 'days'}
-                                                </td>
-                                                <td className="p-3.5 max-w-xs truncate text-slate-600">
-                                                    {req.reason || '--'}
-                                                </td>
-                                                <td className="p-3.5">
-                                                    {getStatusBadge(req.status)}
-                                                </td>
-                                                <td className="p-3.5 max-w-xs truncate text-slate-600 italic">
-                                                    {req.comment || '--'}
-                                                </td>
-                                                <td className="p-3.5 text-right pr-6">
-                                                    {req.status === 'PENDING' && (
-                                                        <button
-                                                            onClick={() => handleCancelRequest(req.id)}
-                                                            className="text-red-600 hover:text-red-800 font-bold text-xs transition-colors"
-                                                        >
-                                                            Cancel
-                                                        </button>
-                                                    )}
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        )}
-                    </CardContent>
-                </Card>
+                {/* Balances Summary */}
+                <div className="grid grid-cols-2 gap-4 mb-8 border-b border-slate-700 pb-6 text-center">
+                    <div>
+                        <div className="text-blue-400 font-bold text-sm mb-1">Paid time Off</div>
+                        <div className="text-xs text-slate-400">
+                            {loadingMy ? '...' : (balances.find(b => b.leave_type_name.toLowerCase().includes('paid'))?.remaining_days || 0)} Days Available
+                        </div>
+                    </div>
+                    <div>
+                        <div className="text-blue-400 font-bold text-sm mb-1">Sick time off</div>
+                        <div className="text-xs text-slate-400">
+                            {loadingMy ? '...' : (balances.find(b => b.leave_type_name.toLowerCase().includes('sick'))?.remaining_days || 0)} Days Available
+                        </div>
+                    </div>
+                </div>
+
+                {/* Full Year Calendar Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    {Array.from({ length: 12 }).map((_, i) => renderMonth(currentYear, i))}
+                </div>
             </div>
 
-            {/* Modals */}
+            {/* Request Modal */}
             <RequestLeaveModal 
-                leaveTypes={leaveTypes}
                 isOpen={isRequestModalOpen}
                 onClose={() => setIsRequestModalOpen(false)}
+                leaveTypes={leaveTypes}
                 onSuccess={loadMyTimeOff}
+                defaultStartDate={selectedDate ? selectedDate.toISOString().split('T')[0] : undefined}
             />
         </div>
     );
