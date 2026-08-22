@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 from datetime import datetime, date
-from typing import Optional
+from typing import Optional, List
 from decimal import Decimal
 from app.models.attendance import AttendanceStatusEnum
 from app.models.leave import LeaveStatusEnum
@@ -29,42 +29,77 @@ class AttendanceResponse(AttendanceBase):
     class Config:
         from_attributes = True
 
-# Leave Schemas
+# Leave Type Schemas
 class LeaveTypeBase(BaseModel):
     name: str
     description: Optional[str] = None
     paid: bool = True
+    max_days: int = 15
     active: bool = True
+
+class LeaveTypeCreate(BaseModel):
+    name: str
+    description: Optional[str] = None
+    paid: bool = True
+    max_days: int = 15
+
+class LeaveTypeUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    paid: Optional[bool] = None
+    max_days: Optional[int] = None
+    active: Optional[bool] = None
 
 class LeaveTypeResponse(LeaveTypeBase):
     id: int
-
-    class Config:
-        from_attributes = True
-
-class LeaveRequestBase(BaseModel):
-    start_date: date
-    end_date: date
-    reason: Optional[str] = None
-
-class LeaveRequestCreate(LeaveRequestBase):
-    leave_type_id: int
-
-class LeaveRequestUpdate(BaseModel):
-    status: LeaveStatusEnum
-    comment: Optional[str] = None
-
-class LeaveRequestResponse(LeaveRequestBase):
-    id: int
-    employee_id: int
-    leave_type_id: int
-    status: LeaveStatusEnum
-    comment: Optional[str] = None
-    approver_id: Optional[int] = None
     created_at: datetime
 
     class Config:
         from_attributes = True
+
+# Leave Request Schemas
+class LeaveRequestCreate(BaseModel):
+    leave_type_id: int
+    start_date: date
+    end_date: date
+    reason: Optional[str] = None
+
+class LeaveRequestApprove(BaseModel):
+    comment: Optional[str] = None
+
+class LeaveRequestRefuse(BaseModel):
+    comment: str = Field(..., min_length=1, description="Refusal reason is required")
+
+class LeaveRequestResponse(BaseModel):
+    id: int
+    employee_id: int
+    employee_name: Optional[str] = None
+    employee_code: Optional[str] = None
+    department_name: Optional[str] = None
+    leave_type_id: int
+    leave_type_name: Optional[str] = None
+    leave_type_paid: Optional[bool] = None
+    start_date: date
+    end_date: date
+    duration_days: int
+    reason: Optional[str] = None
+    comment: Optional[str] = None
+    status: LeaveStatusEnum
+    approver_id: Optional[int] = None
+    approver_name: Optional[str] = None
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+class LeaveBalanceResponse(BaseModel):
+    leave_type_id: int
+    leave_type_name: str
+    paid: bool
+    max_days: int
+    used_days: int
+    remaining_days: int
 
 # Payroll Schemas
 class PayrollBase(BaseModel):

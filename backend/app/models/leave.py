@@ -7,7 +7,8 @@ from app.core.database import Base
 class LeaveStatusEnum(str, enum.Enum):
     PENDING = "PENDING"
     APPROVED = "APPROVED"
-    REJECTED = "REJECTED"
+    REFUSED = "REFUSED"
+    CANCELLED = "CANCELLED"
 
 class LeaveType(Base):
     __tablename__ = "leave_types"
@@ -16,6 +17,7 @@ class LeaveType(Base):
     name = Column(String, unique=True, nullable=False, index=True)
     description = Column(String, nullable=True)
     paid = Column(Boolean, default=True)
+    max_days = Column(Integer, default=15)
     active = Column(Boolean, default=True)
     
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
@@ -34,7 +36,7 @@ class LeaveRequest(Base):
     end_date = Column(Date, nullable=False)
     status = Column(Enum(LeaveStatusEnum), default=LeaveStatusEnum.PENDING, index=True)
     reason = Column(Text, nullable=True)
-    comment = Column(Text, nullable=True) # HR comment
+    comment = Column(Text, nullable=True) # Refusal reason / HR comment
     
     approver_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     

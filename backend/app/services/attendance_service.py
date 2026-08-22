@@ -126,10 +126,39 @@ class AttendanceService:
     def get_today_attendance(db: Session, user: User) -> Optional[Attendance]:
         employee = AttendanceService.get_employee_for_user(db, user)
         today = datetime.now(timezone.utc).date()
-        return db.query(Attendance).filter(
+        att = db.query(Attendance).filter(
             Attendance.employee_id == employee.id,
             Attendance.date == today
         ).first()
+
+        if att:
+            return att
+
+        # Check if employee has an approved leave for today
+        from app.models.leave import LeaveRequest, LeaveStatusEnum
+        approved_leave = db.query(LeaveRequest).filter(
+            LeaveRequest.employee_id == employee.id,
+            LeaveRequest.status == LeaveStatusEnum.APPROVED,
+            LeaveRequest.start_date <= today,
+            LeaveRequest.end_date >= today
+        ).first()
+
+        if approved_leave:
+            # Return virtual attendance representation for leave
+            virtual_att = Attendance(
+                id=0,
+                employee_id=employee.id,
+                date=today,
+                check_in=None,
+                check_out=None,
+                worked_hours=0.0,
+                extra_hours=0.0,
+                status=AttendanceStatusEnum.LEAVE
+            )
+            virtual_att.employee = employee
+            return virtual_att
+
+        return None
 
     @staticmethod
     def get_my_attendance_history(
