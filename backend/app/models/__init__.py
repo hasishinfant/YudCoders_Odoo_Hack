@@ -9,6 +9,7 @@ from app.models.document import Document
 from app.models.notification import Notification
 from app.models.audit_log import AuditLog
 from app.models.company_info import Announcement, Holiday
+from app.models.system_settings import SystemSetting
 
 __all__ = [
     "Base",
@@ -26,5 +27,6 @@ __all__ = [
     "Notification",
     "AuditLog",
     "Announcement",
-    "Holiday"
+    "Holiday",
+    "SystemSetting"
 ]

@@ -1,9 +1,33 @@
 from typing import Optional, List, Tuple
+import threading
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 
 from app.models.user import User, RoleEnum
 from app.models.notification import Notification
+from app.core.mail import send_email
+
+def send_notification_email(to_email: str, title: str, message: str):
+    subject = f"[Dayflow Notification] {title}"
+    body = f"""
+    <html>
+      <body style="font-family: Arial, sans-serif; color: #333; line-height: 1.6;">
+        <div style="max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #fff;">
+          <div style="background-color: #0052FF; color: #fff; padding: 15px 20px; border-radius: 8px 8px 0 0; font-weight: bold; font-size: 16px;">
+            Dayflow Hub - Notification
+          </div>
+          <div style="padding: 20px 0;">
+            <h2 style="margin-top: 0; color: #1e293b;">{title}</h2>
+            <p style="font-size: 14px; color: #475569;">{message}</p>
+          </div>
+          <div style="border-top: 1px solid #f1f5f9; padding-top: 15px; font-size: 11px; color: #94a3b8; text-align: center;">
+            This is an automated notification from your Dayflow HR Portal.
+          </div>
+        </div>
+      </body>
+    </html>
+    """
+    send_email(to_email, subject, body)
 
 class NotificationService:
     @staticmethod
@@ -17,6 +41,15 @@ class NotificationService:
         db.add(notif)
         db.commit()
         db.refresh(notif)
+        
+        # Send Email in background thread
+        try:
+            user = db.query(User).filter(User.id == user_id).first()
+            if user and user.email:
+                threading.Thread(target=send_notification_email, args=(user.email, title, message), daemon=True).start()
+        except Exception as e:
+            print(f"Failed to queue notification email: {e}")
+            
         return notif
 
     @staticmethod
@@ -32,6 +65,14 @@ class NotificationService:
             )
             db.add(notif)
             created.append(notif)
+            
+            # Send Email in background thread
+            if admin.email:
+                try:
+                    threading.Thread(target=send_notification_email, args=(admin.email, title, message), daemon=True).start()
+                except Exception as e:
+                    print(f"Failed to queue notification email for admin: {e}")
+                    
         db.commit()
         for n in created:
             db.refresh(n)

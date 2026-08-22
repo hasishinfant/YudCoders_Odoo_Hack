@@ -1,17 +1,56 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Shield, Bell, Globe, Lock, Check } from 'lucide-react';
+import { Shield, Bell, Globe, Lock, Check, Mail } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import { getMailSettings, updateMailSettings } from '@/services/company';
+import { Input } from '@/components/ui/input';
 
 export default function SettingsPage() {
+    const { user } = useAuth();
     const [emailNotif, setEmailNotif] = useState(true);
     const [smsNotif, setSmsNotif] = useState(false);
     const [twoFactor, setTwoFactor] = useState(true);
     const [language, setLanguage] = useState('en');
     const [saved, setSaved] = useState(false);
+    
+    // SMTP states
+    const [smtpEmail, setSmtpEmail] = useState('');
+    const [smtpPassword, setSmtpPassword] = useState('');
+    const [smtpLoading, setSmtpLoading] = useState(false);
 
-    const handleSave = () => {
-        setSaved(true);
-        setTimeout(() => setSaved(false), 2000);
+    useEffect(() => {
+        if (user?.role === 'ADMIN') {
+            const loadSmtp = async () => {
+                try {
+                    const res = await getMailSettings();
+                    if (res.data?.success) {
+                        setSmtpEmail(res.data.data.smtp_email);
+                        setSmtpPassword(res.data.data.smtp_password);
+                    }
+                } catch (err) {
+                    console.error('Failed to load SMTP settings', err);
+                }
+            };
+            loadSmtp();
+        }
+    }, [user]);
+
+    const handleSave = async () => {
+        setSmtpLoading(true);
+        try {
+            if (user?.role === 'ADMIN') {
+                await updateMailSettings({
+                    smtp_email: smtpEmail,
+                    smtp_password: smtpPassword
+                });
+            }
+            setSaved(true);
+            setTimeout(() => setSaved(false), 2000);
+        } catch (err) {
+            console.error('Failed to save settings', err);
+        } finally {
+            setSmtpLoading(false);
+        }
     };
 
     return (
@@ -24,7 +63,8 @@ export default function SettingsPage() {
                 </div>
                 <button
                     onClick={handleSave}
-                    className="px-5 py-2.5 bg-[#0052FF] hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition-all shadow-md shadow-blue-500/10 flex items-center space-x-1.5 self-start sm:self-auto"
+                    disabled={smtpLoading}
+                    className="px-5 py-2.5 bg-[#0052FF] hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition-all shadow-md shadow-blue-500/10 flex items-center space-x-1.5 self-start sm:self-auto disabled:opacity-50"
                 >
                     {saved ? (
                         <>
@@ -113,6 +153,42 @@ export default function SettingsPage() {
                             </div>
                         </CardContent>
                     </Card>
+
+                    {/* SMTP Configuration for Admin */}
+                    {user?.role === 'ADMIN' && (
+                        <Card className="bg-white border-slate-200/80 rounded-2xl shadow-sm">
+                            <CardHeader>
+                                <CardTitle className="text-base font-black text-slate-900 flex items-center space-x-2">
+                                    <Mail className="w-5 h-5 text-indigo-500" />
+                                    <span>Mail Server Configuration (SMTP)</span>
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="p-6 space-y-4">
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold text-slate-700">SMTP Server Email</label>
+                                    <Input
+                                        type="email"
+                                        placeholder="e.g. flipclip0008@gmail.com"
+                                        value={smtpEmail}
+                                        onChange={(e) => setSmtpEmail(e.target.value)}
+                                        className="h-10 text-xs rounded-xl"
+                                    />
+                                    <p className="text-[10px] text-slate-400">Used as the sender address for company-wide notifications and announcements.</p>
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold text-slate-700">SMTP App Password</label>
+                                    <Input
+                                        type="password"
+                                        placeholder="e.g. csco ohor rehf jcqe"
+                                        value={smtpPassword}
+                                        onChange={(e) => setSmtpPassword(e.target.value)}
+                                        className="h-10 text-xs rounded-xl"
+                                    />
+                                    <p className="text-[10px] text-slate-400">Your Google App Password or SMTP password (spaces will be automatically cleaned).</p>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    )}
                 </div>
 
                 {/* Account Settings Sidebar (4 cols) */}

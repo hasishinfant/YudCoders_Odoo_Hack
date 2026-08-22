@@ -37,3 +37,9 @@ class HolidayResponse(HolidayBase):
 
     class Config:
         from_attributes = True
+
+# System Setting Schemas
+class MailSettingsUpdate(BaseModel):
+    smtp_email: str
+    smtp_password: str
+

@@ -12,7 +12,6 @@ import {
   Megaphone,
   HelpCircle,
   Settings,
-  FileText,
   LogOut, 
   Menu, 
   X,

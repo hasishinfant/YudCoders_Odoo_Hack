@@ -57,3 +57,12 @@ export const createHoliday = async (data: HolidayCreate) => {
 export const deleteHoliday = async (id: number) => {
     return api.delete<{ success: boolean; message: string }>(`/holidays/${id}`);
 };
+
+// System Settings Api
+export const getMailSettings = async () => {
+    return api.get<{ success: boolean; data: { smtp_email: string; smtp_password: string } }>('/settings/mail');
+};
+
+export const updateMailSettings = async (data: { smtp_email: string; smtp_password: string }) => {
+    return api.post<{ success: boolean; message: string }>('/settings/mail', data);
+};
