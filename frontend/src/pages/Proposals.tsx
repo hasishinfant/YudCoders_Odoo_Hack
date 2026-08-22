@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Search } from 'lucide-react';
+import { Search, Calendar as CalendarIcon, Check, X } from 'lucide-react';
 import { getAdminLeaveRequests, approveLeaveRequest, refuseLeaveRequest } from '@/services/leave';
+import { Card } from '@/components/ui/card';
 
 export default function ProposalsPage() {
   const [requests, setRequests] = useState<any[]>([]);
@@ -48,50 +49,64 @@ export default function ProposalsPage() {
   );
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6 animate-in fade-in zoom-in-95 duration-300">
+    <div className="max-w-6xl mx-auto space-y-6">
       {/* Header Tabs */}
-      <div className="flex items-center space-x-1 border-b border-slate-700 bg-slate-900 px-4 pt-4 rounded-t-xl overflow-hidden">
+      <div className="flex items-center justify-between border-b border-slate-200 pb-2">
+        <div>
+          <h1 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+            <CalendarIcon className="w-6 h-6 text-[#0052FF]" />
+            Time Off Approvals
+          </h1>
+          <p className="text-xs text-slate-500 font-medium">Review and process leave applications across the organization.</p>
+        </div>
+      </div>
+
+      <div className="flex items-center space-x-1 border-b border-slate-200 bg-white px-4 pt-4 rounded-t-2xl border border-b-0 border-slate-200/80 shadow-2xs">
         <button 
           onClick={() => setActiveTab('Time Off')}
-          className={`px-6 py-2.5 text-xs font-bold rounded-t-lg transition-colors ${activeTab === 'Time Off' ? 'bg-slate-700 text-white' : 'text-slate-400 hover:text-slate-200'}`}
+          className={`px-6 py-2.5 text-xs font-black rounded-t-xl transition-colors border-b-2 ${
+            activeTab === 'Time Off' ? 'border-[#0052FF] text-[#0052FF]' : 'border-transparent text-slate-400 hover:text-slate-600'
+          }`}
         >
           Time Off
         </button>
         <button 
           onClick={() => setActiveTab('Allocation')}
-          className={`px-6 py-2.5 text-xs font-bold rounded-t-lg transition-colors ${activeTab === 'Allocation' ? 'bg-slate-700 text-white' : 'text-slate-400 hover:text-slate-200'}`}
+          className={`px-6 py-2.5 text-xs font-black rounded-t-xl transition-colors border-b-2 ${
+            activeTab === 'Allocation' ? 'border-[#0052FF] text-[#0052FF]' : 'border-transparent text-slate-400 hover:text-slate-600'
+          }`}
         >
           Allocation
         </button>
       </div>
 
-      <div className="bg-slate-900 rounded-b-xl rounded-tr-xl border border-slate-700 p-6 shadow-xl text-slate-200">
+      <Card className="bg-white rounded-b-2xl rounded-tr-2xl border border-slate-200/80 p-6 shadow-sm text-slate-700">
         <div className="flex items-center justify-between mb-8">
-          <button className="bg-purple-600 hover:bg-purple-700 text-white font-bold px-5 py-2 rounded text-xs transition-colors shadow-lg shadow-purple-500/20">
-            NEW
+          <button className="bg-[#0052FF] hover:bg-blue-700 text-white font-bold px-5 py-2.5 rounded-xl text-xs transition-colors shadow-md shadow-blue-500/10">
+            New Allocation
           </button>
           
           <div className="relative w-64">
-            <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-500" />
+            <Search className="w-4 h-4 absolute left-3.5 top-3 text-slate-400" />
             <input 
               type="text" 
-              placeholder="Searchbar"
+              placeholder="Search employee or leave type..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full bg-slate-800 border border-slate-600 rounded-full py-2 pl-10 pr-4 text-xs focus:outline-none focus:border-slate-400 text-white placeholder:text-slate-500 transition-colors"
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 pl-10 pr-4 text-xs focus:outline-none focus:ring-2 focus:ring-[#0052FF]/30 text-slate-800 placeholder:text-slate-400 font-medium"
             />
           </div>
         </div>
 
         {/* Balances Summary */}
-        <div className="grid grid-cols-2 gap-4 mb-8 border-b border-slate-700 pb-6 text-center">
-          <div>
-            <div className="text-blue-400 font-bold text-sm mb-1">Paid time Off</div>
-            <div className="text-xs text-slate-400">24 Days Available</div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8 border-b border-slate-100 pb-6">
+          <div className="bg-blue-50/50 border border-blue-100 rounded-xl p-4 text-center">
+            <div className="text-[#0052FF] font-bold text-xs uppercase tracking-wider mb-1">Company Paid time Off</div>
+            <div className="text-lg font-black text-slate-800">24 Days Average</div>
           </div>
-          <div>
-            <div className="text-blue-400 font-bold text-sm mb-1">Sick time off</div>
-            <div className="text-xs text-slate-400">07 Days Available</div>
+          <div className="bg-indigo-50/50 border border-indigo-100 rounded-xl p-4 text-center">
+            <div className="text-indigo-600 font-bold text-xs uppercase tracking-wider mb-1">Company Sick time off</div>
+            <div className="text-lg font-black text-slate-800">07 Days Average</div>
           </div>
         </div>
 
@@ -99,52 +114,56 @@ export default function ProposalsPage() {
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs border-collapse">
             <thead>
-              <tr className="border-b border-slate-700">
-                <th className="pb-3 font-bold text-slate-400 font-mono">Name</th>
-                <th className="pb-3 font-bold text-slate-400 font-mono">Start Date</th>
-                <th className="pb-3 font-bold text-slate-400 font-mono">End Date</th>
-                <th className="pb-3 font-bold text-slate-400 font-mono">Time off Type</th>
-                <th className="pb-3 font-bold text-slate-400 font-mono">Status</th>
-                <th className="pb-3 font-bold text-slate-400 font-mono text-center">Action</th>
+              <tr className="border-b border-slate-200 text-slate-400">
+                <th className="pb-3 font-bold uppercase tracking-wider pl-4">Name</th>
+                <th className="pb-3 font-bold uppercase tracking-wider">Start Date</th>
+                <th className="pb-3 font-bold uppercase tracking-wider">End Date</th>
+                <th className="pb-3 font-bold uppercase tracking-wider">Time off Type</th>
+                <th className="pb-3 font-bold uppercase tracking-wider">Status</th>
+                <th className="pb-3 font-bold uppercase tracking-wider text-center pr-4">Action</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-slate-100 text-slate-700">
               {loading ? (
-                <tr><td colSpan={6} className="py-8 text-center text-slate-500">Loading requests...</td></tr>
+                <tr><td colSpan={6} className="py-8 text-center text-slate-400 italic">Loading requests...</td></tr>
               ) : filtered.length === 0 ? (
-                <tr><td colSpan={6} className="py-8 text-center text-slate-500">No time off requests found.</td></tr>
+                <tr><td colSpan={6} className="py-8 text-center text-slate-400 italic">No time off requests found.</td></tr>
               ) : (
                 filtered.map(req => (
-                  <tr key={req.id} className="border-b border-slate-800 hover:bg-slate-800/50 transition-colors group">
-                    <td className="py-4 font-semibold">{req.employee_name}</td>
-                    <td className="py-4 font-mono text-slate-400">{req.start_date}</td>
-                    <td className="py-4 font-mono text-slate-400">{req.end_date}</td>
-                    <td className="py-4 text-blue-400 font-bold">{req.leave_type_name || 'Paid Time Off'}</td>
+                  <tr key={req.id} className="hover:bg-slate-50/50 transition-colors group">
+                    <td className="py-4 pl-4 font-bold text-slate-900">{req.employee_name}</td>
+                    <td className="py-4 font-mono font-medium text-slate-500">{req.start_date}</td>
+                    <td className="py-4 font-mono font-medium text-slate-500">{req.end_date}</td>
+                    <td className="py-4 text-[#0052FF] font-bold">{req.leave_type_name || 'Paid Time Off'}</td>
                     <td className="py-4">
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
-                        req.status === 'APPROVED' ? 'bg-green-900/30 text-green-400 border border-green-800/50' :
-                        req.status === 'REFUSED' ? 'bg-red-900/30 text-red-400 border border-red-800/50' :
-                        'bg-amber-900/30 text-amber-400 border border-amber-800/50'
+                      <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider border ${
+                        req.status === 'APPROVED' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                        req.status === 'REFUSED' ? 'bg-red-50 text-red-700 border-red-200' :
+                        'bg-amber-50 text-amber-700 border-amber-200'
                       }`}>
                         {req.status}
                       </span>
                     </td>
-                    <td className="py-4">
+                    <td className="py-4 pr-4">
                       {req.status === 'PENDING' ? (
-                        <div className="flex items-center justify-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="flex items-center justify-center space-x-2">
                           <button 
                             onClick={() => handleReject(req.id)}
-                            className="w-6 h-6 bg-red-500 hover:bg-red-600 rounded transition-colors shadow-sm"
+                            className="w-7 h-7 bg-red-500 hover:bg-red-600 text-white rounded-lg flex items-center justify-center transition-colors shadow-sm"
                             title="Reject"
-                          />
+                          >
+                            <X className="w-4 h-4 text-white" />
+                          </button>
                           <button 
                             onClick={() => handleApprove(req.id)}
-                            className="w-6 h-6 bg-emerald-500 hover:bg-emerald-600 rounded transition-colors shadow-sm"
+                            className="w-7 h-7 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg flex items-center justify-center transition-colors shadow-sm"
                             title="Approve"
-                          />
+                          >
+                            <Check className="w-4 h-4 text-white" />
+                          </button>
                         </div>
                       ) : (
-                        <div className="text-center text-[10px] text-slate-500 font-bold uppercase">Done</div>
+                        <div className="text-center text-[10px] text-slate-400 font-bold uppercase tracking-wider">Processed</div>
                       )}
                     </td>
                   </tr>
@@ -153,7 +172,7 @@ export default function ProposalsPage() {
             </tbody>
           </table>
         </div>
-      </div>
+      </Card>
     </div>
   );
 }
