@@ -1,5 +1,5 @@
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Users, User, LogOut } from 'lucide-react';
+import { LayoutDashboard, Users, User, Clock, LogOut } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
 export default function MainLayout() {
@@ -16,6 +16,7 @@ export default function MainLayout() {
 
   const navItems = [
     { path: '/', label: 'Dashboard', icon: LayoutDashboard, show: true },
+    { path: '/attendance', label: 'Attendance', icon: Clock, show: true },
     { path: '/employees', label: 'Employees', icon: Users, show: isAdmin },
     { path: '/profile', label: 'My Profile', icon: User, show: true },
   ];

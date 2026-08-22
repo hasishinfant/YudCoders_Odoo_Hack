@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from datetime import datetime, date, time
+from datetime import datetime, date
 from typing import Optional
 from decimal import Decimal
 from app.models.attendance import AttendanceStatusEnum
@@ -9,8 +9,10 @@ from app.models.leave import LeaveStatusEnum
 class AttendanceBase(BaseModel):
     date: date
     status: AttendanceStatusEnum = AttendanceStatusEnum.PRESENT
-    check_in: Optional[time] = None
-    check_out: Optional[time] = None
+    check_in: Optional[datetime] = None
+    check_out: Optional[datetime] = None
+    worked_hours: Optional[float] = None
+    extra_hours: Optional[float] = None
 
 class AttendanceCreate(AttendanceBase):
     employee_id: int
@@ -18,7 +20,11 @@ class AttendanceCreate(AttendanceBase):
 class AttendanceResponse(AttendanceBase):
     id: int
     employee_id: int
+    employee_name: Optional[str] = None
+    employee_code: Optional[str] = None
+    department_name: Optional[str] = None
     created_at: datetime
+    updated_at: datetime
 
     class Config:
         from_attributes = True

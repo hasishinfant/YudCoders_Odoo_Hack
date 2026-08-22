@@ -6,6 +6,7 @@ import Login from './pages/Login';
 import ChangePassword from './pages/ChangePassword';
 import Employees from './pages/Employees';
 import EmployeeDetail from './pages/EmployeeDetail';
+import AttendancePage from './pages/Attendance';
 import { ProtectedRoute } from './routes/ProtectedRoute';
 
 function App() {
@@ -20,6 +21,7 @@ function App() {
             
             <Route path="/" element={<MainLayout />}>
               <Route index element={<Dashboard />} />
+              <Route path="attendance" element={<AttendancePage />} />
               <Route path="profile" element={<EmployeeDetail isSelfProfile />} />
               
               {/* Admin Protected Routes */}
