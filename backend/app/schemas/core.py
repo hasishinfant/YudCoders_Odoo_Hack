@@ -46,6 +46,10 @@ class EmployeeBase(BaseModel):
     address: Optional[str] = None
     job_title: Optional[str] = None
     joining_date: Optional[date] = None
+    date_of_birth: Optional[str] = "20 Nov 2003"
+    gender: Optional[str] = "Female"
+    marital_status: Optional[str] = "Single"
+    nationality: Optional[str] = "Indian"
     employment_status: str = "ACTIVE"
     department_id: Optional[int] = None
     company_name: Optional[str] = "Dayflow"
@@ -67,6 +71,10 @@ class EmployeeCreateAdmin(BaseModel):
     address: Optional[str] = None
     job_title: Optional[str] = None
     joining_date: Optional[date] = None
+    date_of_birth: Optional[str] = "20 Nov 2003"
+    gender: Optional[str] = "Female"
+    marital_status: Optional[str] = "Single"
+    nationality: Optional[str] = "Indian"
     department_id: Optional[int] = None
     company_name: Optional[str] = "Dayflow"
     location: Optional[str] = None
@@ -79,6 +87,10 @@ class EmployeeUpdate(BaseModel):
     job_title: Optional[str] = None
     department_id: Optional[int] = None
     joining_date: Optional[date] = None
+    date_of_birth: Optional[str] = None
+    gender: Optional[str] = None
+    marital_status: Optional[str] = None
+    nationality: Optional[str] = None
     employment_status: Optional[str] = None
     company_name: Optional[str] = None
     location: Optional[str] = None
@@ -88,6 +100,8 @@ class EmployeeUpdate(BaseModel):
     certifications: Optional[str] = None
 
 class EmployeeUpdateSelf(BaseModel):
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
     phone: Optional[str] = None
     address: Optional[str] = None
     avatar_url: Optional[str] = None

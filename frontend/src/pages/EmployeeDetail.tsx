@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { 
-  Shield, 
   Lock, 
   Check,
   Edit3,
@@ -20,7 +19,12 @@ import {
   KeyRound,
   Smartphone,
   CreditCard,
-  X
+  X,
+  Calendar as CalendarIcon,
+  Users,
+  Heart,
+  Globe,
+  Settings
 } from 'lucide-react';
 
 interface EmployeeDetailProps {
@@ -42,7 +46,7 @@ export default function EmployeeDetail({ isSelfProfile = true }: EmployeeDetailP
     const [editPhone, setEditPhone] = useState('');
     const [editAddress, setEditAddress] = useState('');
 
-    // Interactive ID Card Flip State (Must NOT flip on hover, ONLY on click)
+    // Interactive ID Card Flip State (Flips ONLY when clicked)
     const [isIdCardFlipped, setIsIdCardFlipped] = useState(false);
 
     // Account & Security Interactive Controls
@@ -50,7 +54,7 @@ export default function EmployeeDetail({ isSelfProfile = true }: EmployeeDetailP
     const [devicesModalOpen, setDevicesModalOpen] = useState(false);
     const [emailModalOpen, setEmailModalOpen] = useState(false);
 
-    // Notifications
+    // Toast Notifications
     const [toastMessage, setToastMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
 
     const isAdmin = currentUser?.role === 'ADMIN';
@@ -87,7 +91,7 @@ export default function EmployeeDetail({ isSelfProfile = true }: EmployeeDetailP
         setTimeout(() => setToastMessage(null), 3500);
     };
 
-    // Save field updates
+    // Save field updates to backend
     const handleSaveField = async (field: 'name' | 'phone' | 'address') => {
         if (!employee) return;
         try {
@@ -117,7 +121,7 @@ export default function EmployeeDetail({ isSelfProfile = true }: EmployeeDetailP
         }
     };
 
-    // Download My Data feature
+    // Download My Data export
     const handleDownloadData = () => {
         if (!employee) return;
         const dataReport = {
@@ -130,10 +134,10 @@ export default function EmployeeDetail({ isSelfProfile = true }: EmployeeDetailP
             email: employee.email || "kaaysha.rao@dayflow.com",
             phone: employee.phone || "+91 98765 43210",
             address: employee.address || "Koramangala, Bengaluru, Karnataka - 560034",
-            date_of_birth: "20 Nov 2003",
-            gender: "Female",
-            marital_status: "Single",
-            nationality: "Indian",
+            date_of_birth: (employee as any)?.date_of_birth || "20 Nov 2003",
+            gender: (employee as any)?.gender || "Female",
+            marital_status: (employee as any)?.marital_status || "Single",
+            nationality: (employee as any)?.nationality || "Indian",
             employment_status: employee.employment_status || "ACTIVE",
             company: employee.company_name || "Dayflow Inc.",
             joining_date: employee.joining_date || "15 Aug 2023"
@@ -160,6 +164,7 @@ export default function EmployeeDetail({ isSelfProfile = true }: EmployeeDetailP
         );
     }
 
+    // Dynamic Database Values
     const nameDisplay = employee ? `${employee.first_name} ${employee.last_name}` : 'Kaaysha Rao';
     const codeDisplay = employee?.employee_code || 'EMP00123';
     const titleDisplay = employee?.job_title || 'Software Engineer';
@@ -167,6 +172,10 @@ export default function EmployeeDetail({ isSelfProfile = true }: EmployeeDetailP
     const phoneDisplay = employee?.phone || '+91 98765 43210';
     const addressDisplay = employee?.address || 'Koramangala, Bengaluru, Karnataka - 560034';
     const deptDisplay = employee?.department_name || 'Engineering';
+    const dobDisplay = (employee as any)?.date_of_birth || '20 Nov 2003';
+    const genderDisplay = (employee as any)?.gender || 'Female';
+    const maritalDisplay = (employee as any)?.marital_status || 'Single';
+    const nationalityDisplay = (employee as any)?.nationality || 'Indian';
 
     return (
         <div className="space-y-6 max-w-7xl mx-auto animate-in fade-in duration-300">
@@ -226,13 +235,13 @@ export default function EmployeeDetail({ isSelfProfile = true }: EmployeeDetailP
                         <span className="font-mono text-xs text-blue-200 font-bold mt-0.5">{codeDisplay}</span>
                         <p className="text-xs text-blue-100 font-medium mt-0.5">{titleDisplay}</p>
 
-                        {/* Button: "ID Card" (Flips the card on click!) */}
+                        {/* Button: "View ID Card" (Flips the card on click!) */}
                         <button
                             onClick={() => setIsIdCardFlipped(!isIdCardFlipped)}
                             className="mt-4 bg-white text-[#0052FF] hover:bg-blue-50 font-extrabold text-xs px-5 py-2.5 rounded-xl shadow-md transition-all flex items-center space-x-2"
                         >
                             <CreditCard className="w-4 h-4 text-[#0052FF]" />
-                            <span>ID Card</span>
+                            <span>View ID Card</span>
                         </button>
                     </div>
 
@@ -293,99 +302,210 @@ export default function EmployeeDetail({ isSelfProfile = true }: EmployeeDetailP
                     {/* Far Right Profile Info & Interactive 3D Flip ID Card */}
                     <div className="lg:col-span-4 grid grid-cols-2 gap-4 items-center border-l border-slate-100 pl-6">
                         <div className="space-y-3 text-xs">
-                            <div>
-                                <span className="text-slate-400 font-semibold block text-[10px] uppercase">Date of Birth</span>
-                                <span className="font-extrabold text-slate-900">20 Nov 2003</span>
+                            <div className="flex items-start space-x-2">
+                                <CalendarIcon className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
+                                <div>
+                                    <span className="text-slate-400 font-semibold block text-[10px] uppercase">Date of Birth</span>
+                                    <span className="font-extrabold text-slate-900">{dobDisplay}</span>
+                                </div>
                             </div>
-                            <div>
-                                <span className="text-slate-400 font-semibold block text-[10px] uppercase">Gender</span>
-                                <span className="font-extrabold text-slate-900">Female</span>
+
+                            <div className="flex items-start space-x-2">
+                                <Users className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
+                                <div>
+                                    <span className="text-slate-400 font-semibold block text-[10px] uppercase">Gender</span>
+                                    <span className="font-extrabold text-slate-900">{genderDisplay}</span>
+                                </div>
                             </div>
-                            <div>
-                                <span className="text-slate-400 font-semibold block text-[10px] uppercase">Marital Status</span>
-                                <span className="font-extrabold text-slate-900">Single</span>
+
+                            <div className="flex items-start space-x-2">
+                                <Heart className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
+                                <div>
+                                    <span className="text-slate-400 font-semibold block text-[10px] uppercase">Marital Status</span>
+                                    <span className="font-extrabold text-slate-900">{maritalDisplay}</span>
+                                </div>
                             </div>
-                            <div>
-                                <span className="text-slate-400 font-semibold block text-[10px] uppercase">Nationality</span>
-                                <span className="font-extrabold text-slate-900">Indian</span>
+
+                            <div className="flex items-start space-x-2">
+                                <Globe className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
+                                <div>
+                                    <span className="text-slate-400 font-semibold block text-[10px] uppercase">Nationality</span>
+                                    <span className="font-extrabold text-slate-900">{nationalityDisplay}</span>
+                                </div>
                             </div>
                         </div>
 
-                        {/* Interactive 3D Flip ID Card Container */}
+                        {/* Interactive 3D Flip ID Card — click only, no hover flip */}
                         <div 
-                            className="perspective-1000 cursor-pointer"
+                            className="perspective-1000 cursor-pointer select-none"
                             onClick={() => setIsIdCardFlipped(!isIdCardFlipped)}
                             title="Click to flip ID Card"
+                            style={{ perspective: '1000px' }}
                         >
-                            <div className={`relative w-48 h-64 rounded-2xl shadow-xl transition-transform duration-700 transform-style-preserve-3d ${
-                                isIdCardFlipped ? 'rotate-y-180' : ''
-                            }`}>
-                                {/* Front Side of ID Card */}
-                                <div className="absolute inset-0 bg-white border border-slate-200 rounded-2xl p-4 flex flex-col justify-between backface-hidden overflow-hidden">
-                                    <div className="flex items-center space-x-2">
-                                        <div className="w-6 h-6 rounded-lg bg-[#0052FF] flex items-center justify-center font-bold text-white text-xs">D</div>
+                            <div
+                                style={{
+                                    position: 'relative',
+                                    width: '13rem',
+                                    height: '21.5rem',
+                                    transformStyle: 'preserve-3d',
+                                    transition: 'transform 0.7s cubic-bezier(0.4,0.2,0.2,1)',
+                                    transform: isIdCardFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
+                                    borderRadius: '1rem',
+                                }}
+                            >
+                                {/* ── FRONT ── */}
+                                <div
+                                    style={{
+                                        position: 'absolute', inset: 0,
+                                        backfaceVisibility: 'hidden',
+                                        WebkitBackfaceVisibility: 'hidden',
+                                        borderRadius: '1rem',
+                                        overflow: 'hidden',
+                                        background: '#fff',
+                                        border: '1px solid #e2e8f0',
+                                        boxShadow: '0 4px 24px rgba(0,0,0,0.10)',
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        padding: '1rem',
+                                        gap: '0',
+                                    }}
+                                >
+                                    {/* Logo header */}
+                                    <div style={{ display:'flex', alignItems:'center', gap:'8px', marginBottom:'10px' }}>
+                                        <div style={{
+                                            width: 26, height: 26,
+                                            borderRadius: 7,
+                                            background: '#0052FF',
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                            fontWeight: 900, color: '#fff', fontSize: 12, flexShrink: 0,
+                                        }}>D</div>
                                         <div>
-                                            <span className="font-black text-xs text-slate-900 block leading-tight">Dayflow</span>
-                                            <span className="text-[8px] text-slate-400 font-semibold block">HR Management System</span>
+                                            <div style={{ fontWeight: 900, fontSize: 11, color: '#0f172a', lineHeight: 1.2 }}>Dayflow</div>
+                                            <div style={{ fontSize: 8, color: '#94a3b8', fontWeight: 600 }}>HR Management System</div>
                                         </div>
                                     </div>
 
-                                    <div className="text-center my-1">
-                                        <div className="w-14 h-14 rounded-full bg-slate-200 mx-auto overflow-hidden border-2 border-[#0052FF] mb-1">
-                                            <img 
-                                                src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=200&auto=format&fit=crop" 
+                                    {/* Avatar */}
+                                    <div style={{ textAlign:'center', marginBottom: 10 }}>
+                                        <div style={{
+                                            width: 64, height: 64,
+                                            borderRadius: '50%',
+                                            overflow: 'hidden',
+                                            margin: '0 auto 8px',
+                                            border: '2px solid #f1f5f9',
+                                            boxShadow: '0 2px 8px rgba(0,0,0,0.10)',
+                                        }}>
+                                            <img
+                                                src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=200&auto=format&fit=crop"
                                                 alt="Avatar"
-                                                className="w-full h-full object-cover"
+                                                style={{ width:'100%', height:'100%', objectFit:'cover' }}
                                             />
                                         </div>
-                                        <h4 className="font-black text-xs text-slate-900 leading-tight">{nameDisplay}</h4>
-                                        <span className="font-mono text-[10px] text-slate-500 font-bold block">{codeDisplay}</span>
-                                        <span className="text-[9px] text-[#0052FF] font-extrabold block">{titleDisplay}</span>
+                                        <div style={{ fontWeight: 900, fontSize: 11, color: '#0f172a', lineHeight: 1.3 }}>{nameDisplay}</div>
+                                        <div style={{ fontSize: 9, color: '#64748b', fontWeight: 700, marginTop: 2, fontFamily: 'monospace' }}>{codeDisplay}</div>
+                                        <div style={{ fontSize: 9, color: '#475569', fontWeight: 500, marginTop: 2 }}>{titleDisplay}</div>
                                     </div>
 
-                                    <div className="text-[9px] space-y-0.5 border-t border-slate-100 pt-1.5 text-slate-600">
-                                        <div className="flex justify-between">
-                                            <span className="text-slate-400">Department:</span>
-                                            <strong className="text-slate-900">{deptDisplay}</strong>
-                                        </div>
-                                        <div className="flex justify-between">
-                                            <span className="text-slate-400">Employee Type:</span>
-                                            <strong className="text-slate-900">Full Time</strong>
-                                        </div>
-                                        <div className="flex justify-between">
-                                            <span className="text-slate-400">DOJ:</span>
-                                            <strong className="text-slate-900">15 Aug 2023</strong>
-                                        </div>
+                                    {/* Divider + metadata */}
+                                    <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: 8, display:'flex', flexDirection:'column', gap: 5, flex: 1 }}>
+                                        {[
+                                            { label: 'Department',     value: deptDisplay },
+                                            { label: 'Employee Type',  value: 'Full Time' },
+                                            { label: 'DOJ',            value: '15 Aug 2023' },
+                                        ].map(r => (
+                                            <div key={r.label} style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                                                <span style={{ fontSize: 9, color: '#94a3b8', fontWeight: 500 }}>{r.label}</span>
+                                                <span style={{ fontSize: 9, color: '#0f172a', fontWeight: 800 }}>{r.value}</span>
+                                            </div>
+                                        ))}
                                     </div>
 
-                                    {/* Barcode Graphic & Orange Curve */}
-                                    <div className="flex items-end justify-between pt-1 relative">
-                                        <div className="font-mono text-[10px] tracking-widest text-slate-800 font-black">
-                                            ||| | |||| || | |||
+                                    {/* Barcode + orange accent */}
+                                    <div style={{ position:'relative', display:'flex', alignItems:'flex-end', marginTop: 8, paddingTop: 4 }}>
+                                        <div style={{
+                                            fontFamily: 'monospace',
+                                            fontSize: 12,
+                                            letterSpacing: '-1px',
+                                            color: '#0f172a',
+                                            fontWeight: 900,
+                                            transform: 'scaleY(1.4)',
+                                            transformOrigin: 'bottom',
+                                            lineHeight: 1,
+                                        }}>
+                                            ||||||||||||||||||||||||||||||||||||
                                         </div>
-                                        <div className="w-8 h-8 bg-amber-500 rounded-tl-full absolute -right-4 -bottom-4 pointer-events-none" />
+                                        {/* Orange curved corner */}
+                                        <div style={{
+                                            position: 'absolute',
+                                            right: -16, bottom: -16,
+                                            width: 44, height: 72,
+                                            background: '#FF9500',
+                                            borderTopLeftRadius: '100%',
+                                            pointerEvents: 'none',
+                                        }} />
                                     </div>
                                 </div>
 
-                                {/* Back Side of ID Card */}
-                                <div className="absolute inset-0 bg-slate-900 text-white rounded-2xl p-4 flex flex-col justify-between rotate-y-180 backface-hidden overflow-hidden border border-slate-800">
-                                    <div className="w-full h-6 bg-slate-800 -mx-4 -mt-4 mb-2" />
-                                    
-                                    <div className="space-y-2 text-center">
-                                        <div className="bg-white p-2 rounded-xl inline-block shadow-md">
-                                            <QrCode className="w-10 h-10 text-slate-900" />
+                                {/* ── BACK ── */}
+                                <div
+                                    style={{
+                                        position: 'absolute', inset: 0,
+                                        backfaceVisibility: 'hidden',
+                                        WebkitBackfaceVisibility: 'hidden',
+                                        transform: 'rotateY(180deg)',
+                                        borderRadius: '1rem',
+                                        overflow: 'hidden',
+                                        background: '#0f172a',
+                                        border: '1px solid #1e293b',
+                                        boxShadow: '0 8px 32px rgba(0,0,0,0.30)',
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        padding: '1rem',
+                                        gap: '0',
+                                    }}
+                                >
+                                    {/* Magnetic strip */}
+                                    <div style={{ background: '#1e293b', height: 16, margin: '-1rem -1rem 12px', width: 'calc(100% + 2rem)' }} />
+
+                                    {/* QR code */}
+                                    <div style={{ textAlign:'center', marginBottom: 12 }}>
+                                        <div style={{
+                                            background: '#fff',
+                                            borderRadius: 12,
+                                            padding: 8,
+                                            display: 'inline-block',
+                                            boxShadow: '0 2px 12px rgba(0,0,0,0.15)',
+                                        }}>
+                                            <QrCode style={{ width: 48, height: 48, color: '#0f172a' }} />
                                         </div>
-                                        <p className="text-[9px] text-slate-300 font-mono">ID: {codeDisplay}</p>
+                                        <div style={{ fontSize: 9, color: '#fff', fontFamily:'monospace', fontWeight:700, marginTop:6, letterSpacing:'0.1em' }}>
+                                            ID: {codeDisplay}
+                                        </div>
                                     </div>
 
-                                    <div className="text-[8px] text-slate-400 space-y-1 border-t border-slate-800 pt-2 leading-tight">
-                                        <p><strong className="text-white">Emergency Contact:</strong> +91 98765 00000</p>
-                                        <p><strong className="text-white">Issue Date:</strong> 15 Aug 2023</p>
-                                        <p className="text-[7px] text-slate-500 italic">Property of Dayflow Inc. If found, please return to HR Department.</p>
+                                    {/* Emergency info */}
+                                    <div style={{ borderTop:'1px solid #1e293b', paddingTop:8, flex:1, display:'flex', flexDirection:'column', gap:5 }}>
+                                        <div style={{ fontSize: 8, color: '#cbd5e1' }}>
+                                            <span style={{ color:'#fff', fontWeight:700 }}>Emergency Contact: </span>+91 98765 00000
+                                        </div>
+                                        <div style={{ fontSize: 8, color: '#cbd5e1' }}>
+                                            <span style={{ color:'#fff', fontWeight:700 }}>Issue Date: </span>15 Aug 2023
+                                        </div>
+                                        <div style={{ fontSize: 7, color: '#64748b', fontStyle:'italic', marginTop:4, lineHeight:1.4 }}>
+                                            Property of Dayflow Inc. If found, please return to HR Department.
+                                        </div>
                                     </div>
 
-                                    <div className="text-center text-[9px] font-bold text-blue-400 uppercase tracking-widest pt-1 border-t border-slate-800">
-                                        Authorized ID Card
+                                    {/* Authorization seal */}
+                                    <div style={{
+                                        borderTop: '1px solid #1e293b',
+                                        paddingTop: 8,
+                                        display: 'flex', alignItems:'center', justifyContent:'center', gap:4,
+                                        color: '#0052FF', fontSize: 8, fontWeight: 900,
+                                        textTransform: 'uppercase', letterSpacing: '0.15em',
+                                    }}>
+                                        <CheckCircle2 style={{ width:12, height:12, color:'#0052FF' }} />
+                                        <span>Authorized ID Card</span>
                                     </div>
                                 </div>
                             </div>
@@ -497,7 +617,7 @@ export default function EmployeeDetail({ isSelfProfile = true }: EmployeeDetailP
                                         <div className="space-y-1">
                                             <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Gender</label>
                                             <div className="flex items-center justify-between p-2.5 bg-slate-100/80 border border-slate-200 rounded-xl">
-                                                <span className="text-xs font-bold text-slate-700">Female</span>
+                                                <span className="text-xs font-bold text-slate-700">{genderDisplay}</span>
                                                 <Lock className="w-3.5 h-3.5 text-slate-400" />
                                             </div>
                                         </div>
@@ -533,7 +653,7 @@ export default function EmployeeDetail({ isSelfProfile = true }: EmployeeDetailP
                                         <div className="space-y-1">
                                             <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Marital Status</label>
                                             <div className="flex items-center justify-between p-2.5 bg-slate-100/80 border border-slate-200 rounded-xl">
-                                                <span className="text-xs font-bold text-slate-700">Single</span>
+                                                <span className="text-xs font-bold text-slate-700">{maritalDisplay}</span>
                                                 <Lock className="w-3.5 h-3.5 text-slate-400" />
                                             </div>
                                         </div>
@@ -542,7 +662,7 @@ export default function EmployeeDetail({ isSelfProfile = true }: EmployeeDetailP
                                         <div className="space-y-1">
                                             <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Date of Birth</label>
                                             <div className="flex items-center justify-between p-2.5 bg-slate-100/80 border border-slate-200 rounded-xl">
-                                                <span className="text-xs font-bold text-slate-700">20 Nov 2003</span>
+                                                <span className="text-xs font-bold text-slate-700">{dobDisplay}</span>
                                                 <Lock className="w-3.5 h-3.5 text-slate-400" />
                                             </div>
                                         </div>
@@ -551,7 +671,7 @@ export default function EmployeeDetail({ isSelfProfile = true }: EmployeeDetailP
                                         <div className="space-y-1">
                                             <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Nationality</label>
                                             <div className="flex items-center justify-between p-2.5 bg-slate-100/80 border border-slate-200 rounded-xl">
-                                                <span className="text-xs font-bold text-slate-700">Indian</span>
+                                                <span className="text-xs font-bold text-slate-700">{nationalityDisplay}</span>
                                                 <Lock className="w-3.5 h-3.5 text-slate-400" />
                                             </div>
                                         </div>
@@ -652,7 +772,7 @@ export default function EmployeeDetail({ isSelfProfile = true }: EmployeeDetailP
                             {/* Two-Factor Authentication */}
                             <div className="flex items-center justify-between pt-1 border-t border-slate-100">
                                 <div className="flex items-center space-x-2">
-                                    <Shield className="w-4 h-4 text-slate-400" />
+                                    <Settings className="w-4 h-4 text-slate-400" />
                                     <span className="font-semibold text-slate-700">Two-Factor Authentication</span>
                                 </div>
                                 <button
