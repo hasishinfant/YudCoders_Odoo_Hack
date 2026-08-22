@@ -1,4 +1,4 @@
-import { useState, useEffect, type ChangeEvent } from 'react';
+import { useState, useEffect, useRef, type ChangeEvent } from 'react';
 import { Link } from 'react-router-dom';
 import {
   getEmployees,
@@ -42,6 +42,7 @@ export default function EmployeesPage() {
   const [addLoading, setAddLoading] = useState(false);
   const [addError, setAddError] = useState('');
   const [createdCredentials, setCreatedCredentials] = useState<{ login_id: string; initial_password: string } | null>(null);
+  const isSubmittingRef = useRef(false);
 
   const [formData, setFormData] = useState<EmployeeCreatePayload>({
     first_name: '',
@@ -105,6 +106,8 @@ export default function EmployeesPage() {
 
   const handleCreateSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmittingRef.current) return;
+    isSubmittingRef.current = true;
     setAddError('');
     setAddLoading(true);
     setCreatedCredentials(null);
@@ -116,6 +119,7 @@ export default function EmployeesPage() {
     } catch (err: any) {
       setAddError(err.response?.data?.detail || 'Failed to create employee');
     } finally {
+      isSubmittingRef.current = false;
       setAddLoading(false);
     }
   };

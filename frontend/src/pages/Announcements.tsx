@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Megaphone, Search, Plus, Trash2, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
@@ -27,6 +27,8 @@ export default function AnnouncementsPage() {
     const [tag, setTag] = useState('Notice');
     const [tagColor, setTagColor] = useState('bg-blue-50 text-[#0052FF] border-blue-100');
     const [submitError, setSubmitError] = useState('');
+    const [postLoading, setPostLoading] = useState(false);
+    const isSubmittingRef = useRef(false);
 
     const loadAnnouncements = async () => {
         setLoading(true);
@@ -47,9 +49,14 @@ export default function AnnouncementsPage() {
 
     const handleCreate = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (isSubmittingRef.current) return;
+        isSubmittingRef.current = true;
         setSubmitError('');
+        setPostLoading(true);
         if (!title.trim() || !summary.trim()) {
             setSubmitError('Title and message summary are required.');
+            isSubmittingRef.current = false;
+            setPostLoading(false);
             return;
         }
         try {
@@ -67,6 +74,9 @@ export default function AnnouncementsPage() {
             loadAnnouncements();
         } catch (err: any) {
             setSubmitError(err.response?.data?.detail || 'Failed to post announcement.');
+        } finally {
+            isSubmittingRef.current = false;
+            setPostLoading(false);
         }
     };
 
@@ -257,9 +267,10 @@ export default function AnnouncementsPage() {
                                 </Button>
                                 <Button 
                                     type="submit" 
-                                    className="bg-[#0052FF] hover:bg-blue-700 text-white font-bold h-10 rounded-xl px-5"
+                                    className="bg-[#0052FF] hover:bg-blue-700 text-white font-bold h-10 rounded-xl px-5 disabled:opacity-50"
+                                    disabled={postLoading}
                                 >
-                                    Publish
+                                    {postLoading ? 'Publishing...' : 'Publish'}
                                 </Button>
                             </div>
                         </form>
