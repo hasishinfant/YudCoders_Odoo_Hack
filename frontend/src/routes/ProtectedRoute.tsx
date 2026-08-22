@@ -6,11 +6,15 @@ export const ProtectedRoute = ({ allowedRoles }: { allowedRoles?: string[] }) =>
     const location = useLocation();
 
     if (loading) {
-        return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-[#F4F7FC]">
+                <div className="w-10 h-10 border-4 border-[#0052FF] border-t-transparent rounded-full animate-spin" />
+            </div>
+        );
     }
 
     if (!user) {
-        return <Navigate to="/login" replace />;
+        return <Navigate to="/landing" replace />;
     }
 
     // Force password change for newly provisioned accounts

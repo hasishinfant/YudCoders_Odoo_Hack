@@ -149,6 +149,13 @@ class LeaveService:
         db.add(leave_request)
         db.flush()
 
+        from app.services.notification_service import NotificationService
+        NotificationService.notify_admins(
+            db,
+            title="New Leave Request",
+            message=f"{employee.first_name} {employee.last_name} ({employee.employee_code}) submitted a leave request."
+        )
+
         audit = AuditLog(
             user_id=user.id,
             action="CREATE_LEAVE_REQUEST",
@@ -212,6 +219,15 @@ class LeaveService:
         if comment:
             leave_req.comment = comment
 
+        from app.services.notification_service import NotificationService
+        if leave_req.employee and leave_req.employee.user_id:
+            NotificationService.create_notification(
+                db,
+                user_id=leave_req.employee.user_id,
+                title="Leave Request Approved",
+                message=f"Your leave request from {leave_req.start_date} to {leave_req.end_date} has been approved."
+            )
+
         audit = AuditLog(
             user_id=admin_user.id,
             action="APPROVE_LEAVE_REQUEST",
@@ -245,6 +261,15 @@ class LeaveService:
         leave_req.status = LeaveStatusEnum.REFUSED
         leave_req.approver_id = admin_user.id
         leave_req.comment = refusal_reason.strip()
+
+        from app.services.notification_service import NotificationService
+        if leave_req.employee and leave_req.employee.user_id:
+            NotificationService.create_notification(
+                db,
+                user_id=leave_req.employee.user_id,
+                title="Leave Request Refused",
+                message=f"Your leave request from {leave_req.start_date} to {leave_req.end_date} was refused. Reason: {refusal_reason.strip()}"
+            )
 
         audit = AuditLog(
             user_id=admin_user.id,

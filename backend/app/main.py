@@ -1,11 +1,23 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api.routes import health, auth, employees, departments, attendance, leave_types, leave_requests, payroll
+from app.api.routes import (
+    health, 
+    auth, 
+    employees, 
+    departments, 
+    attendance, 
+    leave_types, 
+    leave_requests, 
+    payroll, 
+    documents, 
+    notifications, 
+    reports
+)
 
 app = FastAPI(
     title="Dayflow API",
     description="Dayflow HRMS Backend",
-    version="0.1.0",
+    version="1.0.0",
 )
 
 # CORS middleware
@@ -25,6 +37,9 @@ app.include_router(attendance.router, prefix="/api/attendance", tags=["attendanc
 app.include_router(leave_types.router, prefix="/api/leave-types", tags=["leave-types"])
 app.include_router(leave_requests.router, prefix="/api/leave-requests", tags=["leave-requests"])
 app.include_router(payroll.router, prefix="/api/payroll", tags=["payroll"])
+app.include_router(documents.router, prefix="/api/documents", tags=["documents"])
+app.include_router(notifications.router, prefix="/api/notifications", tags=["notifications"])
+app.include_router(reports.router, prefix="/api/reports", tags=["reports"])
 
 @app.get("/")
 def read_root():
