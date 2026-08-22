@@ -38,13 +38,24 @@ export default function MainLayout() {
     navigate('/login');
   };
 
-  const allNavItems = [
+  interface NavItem {
+    path: string;
+    label: string;
+    icon: any;
+    employeeOnly?: boolean;
+    adminOnly?: boolean;
+    badge?: string;
+    badgeColor?: string;
+    dotBadge?: boolean;
+  }
+
+  const allNavItems: NavItem[] = [
     { path: '/', label: 'Dashboard', icon: LayoutDashboard },
     { path: '/profile', label: 'My Profile', icon: User, employeeOnly: true },
     { path: '/attendance', label: 'Attendance', icon: Clock, employeeOnly: true },
     { path: '/time-off', label: 'Leave Requests', icon: Calendar },
     { path: '/payroll', label: 'Payroll', icon: DollarSign },
-    { path: '/documents', label: 'Documents', icon: Folder, employeeOnly: true },
+    { path: '/documents', label: 'Documents', icon: Folder },
     { path: '/calendar', label: 'Calendar', icon: Calendar },
     { path: '/performance', label: 'Performance', icon: Award, employeeOnly: true },
     { path: '/announcements', label: 'Announcements', icon: Megaphone, dotBadge: true },
@@ -254,13 +265,23 @@ export default function MainLayout() {
 
               {userDropdownOpen && (
                 <div className="absolute right-0 mt-2 w-48 bg-white border border-slate-200 rounded-xl shadow-xl z-50 p-2 text-xs font-semibold">
-                  <Link 
-                    to="/profile" 
-                    onClick={() => setUserDropdownOpen(false)}
-                    className="block px-3 py-2 rounded-lg hover:bg-slate-100 text-slate-700"
-                  >
-                    My Profile
-                  </Link>
+                  {user?.role === 'ADMIN' ? (
+                    <Link 
+                      to="/employees" 
+                      onClick={() => setUserDropdownOpen(false)}
+                      className="block px-3 py-2 rounded-lg hover:bg-slate-100 text-slate-700"
+                    >
+                      Employees Directory
+                    </Link>
+                  ) : (
+                    <Link 
+                      to="/profile" 
+                      onClick={() => setUserDropdownOpen(false)}
+                      className="block px-3 py-2 rounded-lg hover:bg-slate-100 text-slate-700"
+                    >
+                      My Profile
+                    </Link>
+                  )}
                   <Link 
                     to="/settings" 
                     onClick={() => setUserDropdownOpen(false)}

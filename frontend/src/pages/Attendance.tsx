@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { getMyAttendance, getTodayAttendance, type AttendanceRecord } from '@/services/attendance';
+import { getMyAttendance, type AttendanceRecord } from '@/services/attendance';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { 

@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider } from './hooks/useAuth';
+import { AuthProvider, useAuth } from './hooks/useAuth';
 import MainLayout from './layouts/MainLayout';
 import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
@@ -10,8 +10,11 @@ import Employees from './pages/Employees';
 import EmployeeDetail from './pages/EmployeeDetail';
 import AttendancePage from './pages/Attendance';
 import TimeOffPage from './pages/TimeOff';
+import AdminTimeOffPage from './pages/AdminTimeOff';
 import PayrollPage from './pages/Payroll';
+import AdminPayrollPage from './pages/AdminPayroll';
 import DocumentsPage from './pages/Documents';
+import AdminDocumentsPage from './pages/AdminDocuments';
 import ReportsPage from './pages/Reports';
 import AnnouncementsPage from './pages/Announcements';
 import HelpSupportPage from './pages/HelpSupport';
@@ -19,6 +22,21 @@ import SettingsPage from './pages/Settings';
 import PerformancePage from './pages/Performance';
 import CalendarPage from './pages/Calendar';
 import { ProtectedRoute } from './routes/ProtectedRoute';
+
+const TimeOffWrapper = () => {
+  const { user } = useAuth();
+  return user?.role === 'ADMIN' ? <AdminTimeOffPage /> : <TimeOffPage />;
+};
+
+const PayrollWrapper = () => {
+  const { user } = useAuth();
+  return user?.role === 'ADMIN' ? <AdminPayrollPage /> : <PayrollPage />;
+};
+
+const DocumentsWrapper = () => {
+  const { user } = useAuth();
+  return user?.role === 'ADMIN' ? <AdminDocumentsPage /> : <DocumentsPage />;
+};
 
 function App() {
   return (
@@ -36,9 +54,9 @@ function App() {
             <Route path="/" element={<MainLayout />}>
               <Route index element={<Dashboard />} />
               <Route path="attendance" element={<AttendancePage />} />
-              <Route path="time-off" element={<TimeOffPage />} />
-              <Route path="payroll" element={<PayrollPage />} />
-              <Route path="documents" element={<DocumentsPage />} />
+              <Route path="time-off" element={<TimeOffWrapper />} />
+              <Route path="payroll" element={<PayrollWrapper />} />
+              <Route path="documents" element={<DocumentsWrapper />} />
               <Route path="profile" element={<EmployeeDetail isSelfProfile />} />
 
               {/* Active Functional Pages */}

@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { checkIn, checkOut, type AttendanceRecord } from '@/services/attendance';
-import { Clock, LogIn, LogOut as LogOutIcon, CheckCircle2, AlertCircle, Camera, MapPin, X } from 'lucide-react';
+import { Clock, LogOut as LogOutIcon, CheckCircle2, AlertCircle, Camera, MapPin, X } from 'lucide-react';
 
 interface TodayAttendanceCardProps {
     attendance: AttendanceRecord | null;

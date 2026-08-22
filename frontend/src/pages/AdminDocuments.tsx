@@ -1,52 +1,61 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import {
-    getMyDocuments,
+    getAdminDocuments,
     downloadDocumentFile,
     deleteDocument,
     type DocumentItem
 } from '@/services/documents';
-import UploadDocumentModal from '@/components/documents/UploadDocumentModal';
-import { Button } from '@/components/ui/button';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { 
     FileText, 
-    Upload, 
     Download, 
-    Trash2
+    Trash2, 
+    Search, 
+    Building2
 } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 
-export default function DocumentsPage() {
+export default function AdminDocumentsPage() {
     const { user } = useAuth();
+    const isAdmin = user?.role === 'ADMIN';
 
-    // Documents State
-    const [myDocuments, setMyDocuments] = useState<DocumentItem[]>([]);
+    // Admin State
+    const [adminDocuments, setAdminDocuments] = useState<DocumentItem[]>([]);
     const [loading, setLoading] = useState(true);
 
-    // Modal State
-    const [isUploadOpen, setIsUploadOpen] = useState(false);
+    // Filters
+    const [searchTerm, setSearchTerm] = useState('');
+    const [selectedType, setSelectedType] = useState('');
 
-    const loadMyDocs = async () => {
+    const loadAdminDocs = async () => {
+        if (!isAdmin) return;
         setLoading(true);
         try {
-            const res = await getMyDocuments();
-            setMyDocuments(res.data || []);
+            const res = await getAdminDocuments({
+                q: searchTerm || undefined,
+                type: selectedType || undefined
+            });
+            setAdminDocuments(res.data || []);
         } catch (err) {
-            console.error('Failed to load employee documents', err);
+            console.error('Failed to load admin documents', err);
         } finally {
             setLoading(false);
         }
     };
 
     useEffect(() => {
-        loadMyDocs();
-    }, []);
+        const timer = setTimeout(() => {
+            loadAdminDocs();
+        }, 300);
+        return () => clearTimeout(timer);
+    }, [searchTerm, selectedType]);
 
     const handleDelete = async (id: number) => {
         if (!confirm('Are you sure you want to delete this document?')) return;
         try {
             await deleteDocument(id);
-            loadMyDocs();
+            loadAdminDocs();
         } catch (err: any) {
             alert(err.response?.data?.detail || 'Failed to delete document');
         }
@@ -74,41 +83,58 @@ export default function DocumentsPage() {
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-200 pb-4 gap-4">
                 <div>
-                    <h1 className="text-2xl font-black text-slate-900 tracking-tight">My Files &amp; Documents</h1>
-                    <p className="text-xs text-slate-500 mt-1">Upload and manage your HR compliance files, identity proofs, and contracts.</p>
-                </div>
-
-                <div className="flex items-center space-x-3 self-start sm:self-auto shrink-0">
-                    <Button 
-                        onClick={() => setIsUploadOpen(true)}
-                        className="bg-[#0052FF] hover:bg-blue-700 text-white font-black text-xs px-4 h-10 space-x-1.5 rounded-xl shadow-md"
-                    >
-                        <Upload className="w-4 h-4 text-white" />
-                        <span>Upload Document</span>
-                    </Button>
+                    <div className="flex items-center space-x-2">
+                        <h1 className="text-2xl font-black text-slate-900 tracking-tight">Compliance & Documents</h1>
+                        <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-orange-100 text-orange-700">
+                            HR COMPLIANCE CENTER
+                        </span>
+                    </div>
+                    <p className="text-xs text-slate-500 mt-1">Access, download, and verify verified identity contracts and files uploaded by employees.</p>
                 </div>
             </div>
 
-            {/* Documents List */}
+            {/* Admin Filters */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm">
+                <div className="relative sm:col-span-2">
+                    <Search className="w-4 h-4 absolute left-3 top-3.5 text-slate-400" />
+                    <Input 
+                        placeholder="Search employee name, code, file name..." 
+                        className="pl-9 h-10 text-xs rounded-xl"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                </div>
+
+                <select
+                    className="h-10 px-3 py-2 text-xs border rounded-xl bg-white border-slate-200/80 focus:outline-none focus:ring-2 focus:ring-[#0052FF]/30 font-bold text-slate-700"
+                    value={selectedType}
+                    onChange={(e) => setSelectedType(e.target.value)}
+                >
+                    <option value="">All Document Types</option>
+                    <option value="IDENTITY">IDENTITY PROOF</option>
+                    <option value="CONTRACT">EMPLOYMENT CONTRACT</option>
+                    <option value="COMPLIANCE">HR COMPLIANCE</option>
+                    <option value="OTHER">OTHER</option>
+                </select>
+            </div>
+
+            {/* Admin Documents Table */}
             <Card className="bg-white border-slate-200/80 rounded-2xl shadow-sm overflow-hidden">
-                <CardHeader className="border-b border-slate-100 pb-4">
-                    <CardTitle className="text-base font-black text-slate-900">My Uploaded Documents</CardTitle>
-                </CardHeader>
                 <CardContent className="p-0">
                     {loading ? (
-                        <div className="p-8 text-center text-slate-400">Loading documents...</div>
-                    ) : myDocuments.length === 0 ? (
+                        <div className="p-8 text-center text-slate-400">Loading compliance documents...</div>
+                    ) : adminDocuments.length === 0 ? (
                         <div className="p-12 text-center text-slate-500 space-y-2">
-                            <FileText className="w-8 h-8 text-slate-300 mx-auto" />
-                            <p className="font-semibold text-sm">No documents uploaded yet</p>
-                            <p className="text-xs text-slate-400">Please upload your ID proof or contract files.</p>
+                            <Building2 className="w-8 h-8 text-slate-300 mx-auto" />
+                            <p className="font-semibold text-sm">No employee documents uploaded yet</p>
                         </div>
                     ) : (
                         <div className="overflow-x-auto">
                             <table className="w-full text-left text-xs border-collapse">
                                 <thead>
                                     <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold uppercase tracking-wider">
-                                        <th className="p-3.5 pl-6">Document Name</th>
+                                        <th className="p-3.5 pl-6">Employee</th>
+                                        <th className="p-3.5">Document Details</th>
                                         <th className="p-3.5">Type</th>
                                         <th className="p-3.5">Size</th>
                                         <th className="p-3.5">Uploaded Date</th>
@@ -116,9 +142,13 @@ export default function DocumentsPage() {
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-100 text-slate-700">
-                                    {myDocuments.map(doc => (
+                                    {adminDocuments.map(doc => (
                                         <tr key={doc.id} className="hover:bg-slate-50/80 transition-colors">
-                                            <td className="p-3.5 pl-6">
+                                            <td className="p-3.5 pl-6 font-bold text-slate-900">
+                                                <div>{doc.employee_name || 'N/A'}</div>
+                                                <div className="font-mono text-[10px] text-slate-500 font-normal">{doc.employee_code}</div>
+                                            </td>
+                                            <td className="p-3.5">
                                                 <div className="flex items-center space-x-2">
                                                     <FileText className="w-4 h-4 text-slate-400" />
                                                     <span className="font-bold text-slate-900">{doc.name}</span>
@@ -157,13 +187,6 @@ export default function DocumentsPage() {
                     )}
                 </CardContent>
             </Card>
-
-            <UploadDocumentModal 
-                employeeId={user?.id || 1}
-                isOpen={isUploadOpen}
-                onClose={() => setIsUploadOpen(false)}
-                onSuccess={loadMyDocs}
-            />
         </div>
     );
 }
