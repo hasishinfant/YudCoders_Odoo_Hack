@@ -12,6 +12,7 @@ import {
   Megaphone,
   HelpCircle,
   Settings,
+  FileText,
   LogOut, 
   Menu, 
   X,
@@ -53,7 +54,7 @@ export default function MainLayout() {
     { path: '/', label: 'Dashboard', icon: LayoutDashboard },
     { path: '/profile', label: 'My Profile', icon: User, employeeOnly: true },
     { path: '/attendance', label: 'Attendance', icon: Clock, employeeOnly: true },
-    { path: '/time-off', label: 'Leave Requests', icon: Calendar },
+    { path: '/time-off', label: user?.role === 'ADMIN' ? 'Proposals & Approvals' : 'Leave Requests', icon: user?.role === 'ADMIN' ? FileText : Calendar },
     { path: '/payroll', label: 'Payroll', icon: DollarSign },
     { path: '/documents', label: 'Documents', icon: Folder },
     { path: '/calendar', label: 'Calendar', icon: Calendar },
@@ -62,7 +63,7 @@ export default function MainLayout() {
     { path: '/help', label: 'Help & Support', icon: HelpCircle },
     { path: '/settings', label: 'Settings', icon: Settings },
     // Admin-only items
-    { path: '/employees', label: 'Employees', icon: User, adminOnly: true },
+    { path: '/employees', label: 'Employee Directory', icon: User, adminOnly: true },
     { path: '/reports', label: 'Reports & Analytics', icon: BarChart3, adminOnly: true },
   ];
 
@@ -73,7 +74,7 @@ export default function MainLayout() {
   });
 
   return (
-    <div className="flex min-h-screen bg-[#F4F7FC] font-sans antialiased text-slate-900">
+    <div className="flex h-screen bg-[#F4F7FC] font-sans antialiased text-slate-900 overflow-hidden">
       {/* Mobile Drawer Overlay */}
       {mobileMenuOpen && (
         <div 

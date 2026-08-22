@@ -11,8 +11,14 @@ from app.api.routes import (
     payroll, 
     documents, 
     notifications, 
-    reports
+    reports,
+    company_info
 )
+from app.core.database import Base, engine
+import app.models
+
+# Auto create database tables for SQLite
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="Dayflow API",
@@ -40,6 +46,7 @@ app.include_router(payroll.router, prefix="/api/payroll", tags=["payroll"])
 app.include_router(documents.router, prefix="/api/documents", tags=["documents"])
 app.include_router(notifications.router, prefix="/api/notifications", tags=["notifications"])
 app.include_router(reports.router, prefix="/api/reports", tags=["reports"])
+app.include_router(company_info.router, prefix="/api", tags=["company-info"])
 
 @app.get("/")
 def read_root():

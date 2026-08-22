@@ -8,6 +8,7 @@ from app.models.payroll import Payroll
 from app.models.document import Document
 from app.models.notification import Notification
 from app.models.audit_log import AuditLog
+from app.models.company_info import Announcement, Holiday
 
 __all__ = [
     "Base",
@@ -23,5 +24,7 @@ __all__ = [
     "Payroll",
     "Document",
     "Notification",
-    "AuditLog"
+    "AuditLog",
+    "Announcement",
+    "Holiday"
 ]

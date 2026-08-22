@@ -36,6 +36,11 @@ export interface EmployeeCreatePayload {
     department_id?: number;
     company_name?: string;
     location?: string;
+    date_of_birth?: string;
+    gender?: string;
+    marital_status?: string;
+    nationality?: string;
+    avatar_url?: string;
 }
 
 export interface EmployeeCreateResponse {

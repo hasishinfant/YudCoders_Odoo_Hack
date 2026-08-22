@@ -46,8 +46,18 @@ export default function EmployeesPage() {
     first_name: '',
     last_name: '',
     email: '',
+    phone: '',
+    address: '',
     job_title: '',
-    department_id: undefined
+    joining_date: new Date().toISOString().split('T')[0],
+    date_of_birth: '1998-01-01',
+    gender: 'Male',
+    marital_status: 'Single',
+    nationality: 'Indian',
+    department_id: undefined,
+    company_name: 'Dayflow',
+    location: 'Noida Hub',
+    avatar_url: ''
   });
 
   const loadData = async () => {
@@ -132,7 +142,23 @@ export default function EmployeesPage() {
           <Button 
             onClick={() => {
               setCreatedCredentials(null);
-              setFormData({ first_name: '', last_name: '', email: '', job_title: '', department_id: undefined });
+              setFormData({
+                first_name: '',
+                last_name: '',
+                email: '',
+                phone: '',
+                address: '',
+                job_title: '',
+                joining_date: new Date().toISOString().split('T')[0],
+                date_of_birth: '1998-01-01',
+                gender: 'Male',
+                marital_status: 'Single',
+                nationality: 'Indian',
+                department_id: undefined,
+                company_name: 'Dayflow',
+                location: 'Noida Hub',
+                avatar_url: ''
+              });
               setIsAddModalOpen(true);
             }}
             className="bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs px-4 h-10 space-x-1.5 rounded-xl shadow-md shadow-slate-900/10"
@@ -188,15 +214,19 @@ export default function EmployeesPage() {
       ) : viewMode === 'grid' ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {employees.map(emp => (
-            <Card key={emp.id} className="bg-white border border-slate-200/80 rounded-2xl shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden flex flex-col justify-between group">
-              <CardContent className="p-6 space-y-4">
+            <Card key={emp.id} className="bg-white border border-slate-200/80 rounded-2xl shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden flex flex-col justify-between group h-full">
+              <CardContent className="p-6 space-y-4 flex-1">
                 <div className="flex items-start justify-between">
                   <div className="flex items-center space-x-3">
-                    <div className="w-12 h-12 rounded-2xl bg-slate-900 text-emerald-400 font-extrabold flex items-center justify-center text-base shadow-md shadow-slate-900/10">
-                      {emp.first_name?.charAt(0)}{emp.last_name?.charAt(0)}
+                    <div className="w-12 h-12 rounded-2xl bg-blue-50 text-[#0052FF] border border-blue-100 font-extrabold flex items-center justify-center text-base shadow-sm overflow-hidden shrink-0">
+                      {emp.avatar_url ? (
+                        <img src={emp.avatar_url} alt="Profile" className="w-full h-full object-cover" />
+                      ) : (
+                        <span>{emp.first_name?.charAt(0)}{emp.last_name?.charAt(0)}</span>
+                      )}
                     </div>
                     <div>
-                      <h3 className="font-bold text-slate-900 text-sm group-hover:text-emerald-700 transition-colors">
+                      <h3 className="font-bold text-slate-900 text-sm group-hover:text-[#0052FF] transition-colors">
                         {emp.first_name} {emp.last_name}
                       </h3>
                       <span className="font-mono text-[11px] text-slate-500 font-medium block">{emp.employee_code}</span>
@@ -228,7 +258,7 @@ export default function EmployeesPage() {
               <div className="bg-slate-50 p-3.5 border-t border-slate-100 flex justify-end">
                 <Link
                   to={`/employees/${emp.id}`}
-                  className="text-slate-900 hover:text-emerald-700 font-bold text-xs flex items-center space-x-1"
+                  className="text-slate-900 hover:text-[#0052FF] font-bold text-xs flex items-center space-x-1"
                 >
                   <span>View Profile</span>
                   <ChevronRight className="w-4 h-4" />
@@ -289,11 +319,11 @@ export default function EmployeesPage() {
       {/* Add Employee Modal */}
       {isAddModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 overflow-y-auto">
-          <Card className="w-full max-w-lg bg-white border-slate-200 shadow-2xl overflow-hidden rounded-2xl animate-in fade-in zoom-in duration-200">
+          <Card className="w-full max-w-2xl bg-white border-slate-200 shadow-2xl overflow-hidden rounded-2xl animate-in fade-in zoom-in duration-200">
             <div className="bg-slate-900 text-white p-5 flex flex-row items-center justify-between space-y-0">
               <div className="text-lg font-bold text-white flex items-center space-x-2">
-                <UserPlus className="w-5 h-5 text-emerald-400" />
-                <span>Create New Employee</span>
+                <UserPlus className="w-5 h-5 text-[#0052FF]" />
+                <span>Onboard New Employee</span>
               </div>
               <button 
                 onClick={() => setIsAddModalOpen(false)}
@@ -303,7 +333,7 @@ export default function EmployeesPage() {
               </button>
             </div>
 
-            <CardContent className="p-6 space-y-4">
+            <CardContent className="p-6 space-y-4 max-h-[75vh] overflow-y-auto">
               {addError && (
                 <div className="bg-red-50 text-red-600 p-3.5 rounded-xl flex items-center text-xs font-semibold border border-red-200">
                   <AlertCircle className="w-4 h-4 mr-2 shrink-0" />
@@ -339,24 +369,22 @@ export default function EmployeesPage() {
                 </div>
               ) : (
                 <form onSubmit={handleCreateSubmit} className="space-y-4">
+                  {/* Step 1: Personal Details */}
+                  <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 pb-1">Personal Details</h3>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
-                        First Name
-                      </label>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">First Name *</label>
                       <Input 
-                        className="h-10 text-xs"
+                        className="h-10 text-xs rounded-xl"
                         value={formData.first_name}
                         onChange={(e: ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, first_name: e.target.value })}
                         required
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
-                        Last Name
-                      </label>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">Last Name *</label>
                       <Input 
-                        className="h-10 text-xs"
+                        className="h-10 text-xs rounded-xl"
                         value={formData.last_name}
                         onChange={(e: ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, last_name: e.target.value })}
                         required
@@ -364,38 +392,96 @@ export default function EmployeesPage() {
                     </div>
                   </div>
 
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
-                      Email Address
-                    </label>
-                    <Input 
-                      type="email"
-                      className="h-10 text-xs"
-                      value={formData.email}
-                      onChange={(e: ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, email: e.target.value })}
-                      required
-                    />
-                  </div>
-
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
-                        Job Title
-                      </label>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">Email Address *</label>
                       <Input 
-                        className="h-10 text-xs"
-                        value={formData.job_title || ''}
-                        onChange={(e: ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, job_title: e.target.value })}
+                        type="email"
+                        className="h-10 text-xs rounded-xl"
+                        value={formData.email}
+                        onChange={(e: ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, email: e.target.value })}
+                        required
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
-                        Department
-                      </label>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">Phone Number *</label>
+                      <Input 
+                        className="h-10 text-xs rounded-xl"
+                        placeholder="+91 XXXXX XXXXX"
+                        value={formData.phone || ''}
+                        onChange={(e: ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, phone: e.target.value })}
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">Profile Photo URL</label>
+                    <Input 
+                      className="h-10 text-xs rounded-xl"
+                      placeholder="e.g. https://images.unsplash.com/photo-1534528741775-53994a69daeb"
+                      value={formData.avatar_url || ''}
+                      onChange={(e: ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, avatar_url: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-3">
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">Date of Birth *</label>
+                      <Input 
+                        type="date"
+                        className="h-10 text-xs rounded-xl"
+                        value={formData.date_of_birth || ''}
+                        onChange={(e: ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, date_of_birth: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">Gender *</label>
                       <select
-                        className="w-full h-10 px-3 text-xs border rounded-md bg-white border-slate-200 focus:outline-none focus:ring-2 focus:ring-slate-950 font-medium"
+                        className="w-full h-10 px-3 text-xs border rounded-xl bg-white border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#0052FF]/35 font-semibold text-slate-700"
+                        value={formData.gender || ''}
+                        onChange={(e: ChangeEvent<HTMLSelectElement>) => setFormData({ ...formData, gender: e.target.value })}
+                      >
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Other">Other</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">Marital Status *</label>
+                      <select
+                        className="w-full h-10 px-3 text-xs border rounded-xl bg-white border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#0052FF]/35 font-semibold text-slate-700"
+                        value={formData.marital_status || ''}
+                        onChange={(e: ChangeEvent<HTMLSelectElement>) => setFormData({ ...formData, marital_status: e.target.value })}
+                      >
+                        <option value="Single">Single</option>
+                        <option value="Married">Married</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Step 2: Employment & Company Info */}
+                  <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 pb-1 pt-2">Employment Information</h3>
+                  
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">Job Title *</label>
+                      <Input 
+                        className="h-10 text-xs rounded-xl"
+                        placeholder="e.g. Senior Software Engineer"
+                        value={formData.job_title || ''}
+                        onChange={(e: ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, job_title: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">Department *</label>
+                      <select
+                        className="w-full h-10 px-3 text-xs border rounded-xl bg-white border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#0052FF]/35 font-semibold text-slate-700"
                         value={formData.department_id || ''}
                         onChange={(e: ChangeEvent<HTMLSelectElement>) => setFormData({ ...formData, department_id: e.target.value ? Number(e.target.value) : undefined })}
+                        required
                       >
                         <option value="">Select Department</option>
                         {departments.map(d => (
@@ -405,21 +491,64 @@ export default function EmployeesPage() {
                     </div>
                   </div>
 
+                  <div className="grid grid-cols-3 gap-3">
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">Joining Date *</label>
+                      <Input 
+                        type="date"
+                        className="h-10 text-xs rounded-xl"
+                        value={formData.joining_date || ''}
+                        onChange={(e: ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, joining_date: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">Location *</label>
+                      <Input 
+                        className="h-10 text-xs rounded-xl"
+                        placeholder="e.g. Noida Office"
+                        value={formData.location || ''}
+                        onChange={(e: ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, location: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">Nationality *</label>
+                      <Input 
+                        className="h-10 text-xs rounded-xl"
+                        value={formData.nationality || ''}
+                        onChange={(e: ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, nationality: e.target.value })}
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">Residential Address *</label>
+                    <Input 
+                      className="h-10 text-xs rounded-xl"
+                      placeholder="Enter employee's full residential address"
+                      value={formData.address || ''}
+                      onChange={(e: ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, address: e.target.value })}
+                      required
+                    />
+                  </div>
+
                   <div className="flex justify-end space-x-3 pt-3 border-t border-slate-100">
                     <Button 
                       type="button" 
                       variant="outline" 
                       onClick={() => setIsAddModalOpen(false)} 
-                      className="text-xs font-semibold"
+                      className="text-xs font-semibold rounded-xl"
                     >
                       Cancel
                     </Button>
                     <Button 
                       type="submit" 
-                      className="bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs px-5"
+                      className="bg-[#0052FF] hover:bg-blue-700 text-white font-bold text-xs px-5 rounded-xl shadow-md"
                       disabled={addLoading}
                     >
-                      {addLoading ? 'Creating...' : 'Provision Credentials'}
+                      {addLoading ? 'Creating Profile...' : 'Complete Onboarding'}
                     </Button>
                   </div>
                 </form>

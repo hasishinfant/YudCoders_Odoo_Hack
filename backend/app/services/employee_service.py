@@ -80,7 +80,12 @@ class EmployeeService:
                 joining_date=joining_date,
                 employment_status="ACTIVE",
                 company_name=company_name,
-                location=emp_in.location
+                location=emp_in.location,
+                date_of_birth=emp_in.date_of_birth,
+                gender=emp_in.gender,
+                marital_status=emp_in.marital_status,
+                nationality=emp_in.nationality,
+                avatar_url=emp_in.avatar_url
             )
             db.add(employee)
             db.flush()

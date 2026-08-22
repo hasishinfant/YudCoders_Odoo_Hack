@@ -10,13 +10,14 @@ import Employees from './pages/Employees';
 import EmployeeDetail from './pages/EmployeeDetail';
 import AttendancePage from './pages/Attendance';
 import TimeOffPage from './pages/TimeOff';
-import AdminTimeOffPage from './pages/AdminTimeOff';
 import PayrollPage from './pages/Payroll';
 import AdminPayrollPage from './pages/AdminPayroll';
 import DocumentsPage from './pages/Documents';
 import AdminDocumentsPage from './pages/AdminDocuments';
 import ReportsPage from './pages/Reports';
+import ProposalsPage from './pages/Proposals';
 import AnnouncementsPage from './pages/Announcements';
+import NotificationsPage from './pages/Notifications';
 import HelpSupportPage from './pages/HelpSupport';
 import SettingsPage from './pages/Settings';
 import PerformancePage from './pages/Performance';
@@ -25,7 +26,7 @@ import { ProtectedRoute } from './routes/ProtectedRoute';
 
 const TimeOffWrapper = () => {
   const { user } = useAuth();
-  return user?.role === 'ADMIN' ? <AdminTimeOffPage /> : <TimeOffPage />;
+  return user?.role === 'ADMIN' ? <ProposalsPage /> : <TimeOffPage />;
 };
 
 const PayrollWrapper = () => {
@@ -63,6 +64,7 @@ function App() {
               <Route path="calendar" element={<CalendarPage />} />
               <Route path="performance" element={<PerformancePage />} />
               <Route path="announcements" element={<AnnouncementsPage />} />
+              <Route path="notifications" element={<NotificationsPage />} />
               <Route path="help" element={<HelpSupportPage />} />
               <Route path="settings" element={<SettingsPage />} />
               
@@ -71,6 +73,7 @@ function App() {
                 <Route path="employees" element={<Employees />} />
                 <Route path="employees/:id" element={<EmployeeDetail />} />
                 <Route path="reports" element={<ReportsPage />} />
+                <Route path="proposals" element={<ProposalsPage />} />
               </Route>
             </Route>
           </Route>

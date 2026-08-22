@@ -78,6 +78,7 @@ class EmployeeCreateAdmin(BaseModel):
     department_id: Optional[int] = None
     company_name: Optional[str] = "Dayflow"
     location: Optional[str] = None
+    avatar_url: Optional[str] = None
 
 class EmployeeUpdate(BaseModel):
     first_name: Optional[str] = None

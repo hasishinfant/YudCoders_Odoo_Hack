@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import {
     getMyNotifications,
     markNotificationRead,
@@ -137,6 +138,15 @@ export default function NotificationBell() {
                                 </div>
                             ))
                         )}
+                    </div>
+                    <div className="bg-slate-50 p-2.5 text-center border-t border-slate-100">
+                        <Link 
+                            to="/notifications" 
+                            onClick={() => setIsOpen(false)}
+                            className="text-[10px] font-black text-[#0052FF] hover:underline"
+                        >
+                            View All Notifications
+                        </Link>
                     </div>
                 </div>
             )}

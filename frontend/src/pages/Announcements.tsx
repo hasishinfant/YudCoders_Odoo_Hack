@@ -1,84 +1,90 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Megaphone, Bell, Search, CheckCircle2, RefreshCw, AlertCircle } from 'lucide-react';
-import {
-    getMyNotifications,
-    markNotificationRead,
-    markAllNotificationsRead,
-    type NotificationItem
-} from '@/services/notifications';
+import { Megaphone, Search, Plus, Trash2, AlertCircle } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { 
+  getAnnouncements, 
+  createAnnouncement, 
+  deleteAnnouncement, 
+  type Announcement 
+} from '@/services/company';
 
 export default function AnnouncementsPage() {
-    const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+    const { user } = useAuth();
+    const isAdmin = user?.role === 'ADMIN';
+
+    const [announcements, setAnnouncements] = useState<Announcement[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
-    const [showUnreadOnly, setShowUnreadOnly] = useState(false);
-    const [markingAll, setMarkingAll] = useState(false);
 
-    const loadNotifications = async () => {
+    // Modal State
+    const [isOpen, setIsOpen] = useState(false);
+    const [title, setTitle] = useState('');
+    const [summary, setSummary] = useState('');
+    const [tag, setTag] = useState('Notice');
+    const [tagColor, setTagColor] = useState('bg-blue-50 text-[#0052FF] border-blue-100');
+    const [submitError, setSubmitError] = useState('');
+
+    const loadAnnouncements = async () => {
         setLoading(true);
         setError('');
         try {
-            const res = await getMyNotifications({ limit: 50 });
-            setNotifications(res.data || []);
+            const res = await getAnnouncements();
+            setAnnouncements(res.data || []);
         } catch (err: any) {
-            setError(err.response?.data?.detail || 'Failed to load notifications.');
+            setError(err.response?.data?.detail || 'Failed to load announcements.');
         } finally {
             setLoading(false);
         }
     };
 
     useEffect(() => {
-        loadNotifications();
+        loadAnnouncements();
     }, []);
 
-    const handleMarkRead = async (id: number) => {
-        try {
-            await markNotificationRead(id);
-            setNotifications(prev =>
-                prev.map(n => n.id === id ? { ...n, read: true } : n)
-            );
-        } catch {
-            /* silent */
+    const handleCreate = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setSubmitError('');
+        if (!title.trim() || !summary.trim()) {
+            setSubmitError('Title and message summary are required.');
+            return;
         }
-    };
-
-    const handleMarkAllRead = async () => {
-        setMarkingAll(true);
         try {
-            await markAllNotificationsRead();
-            setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-        } catch {
-            /* silent */
-        } finally {
-            setMarkingAll(false);
-        }
-    };
-
-    const filtered = notifications.filter(n => {
-        const matchesSearch =
-            n.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            n.message.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesFilter = !showUnreadOnly || !n.read;
-        return matchesSearch && matchesFilter;
-    });
-
-    const unreadCount = notifications.filter(n => !n.read).length;
-
-    const formatDate = (dateStr: string) => {
-        try {
-            return new Date(dateStr).toLocaleDateString('en-IN', {
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
+            const dateStr = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+            await createAnnouncement({
+                title,
+                summary,
+                date: dateStr,
+                tag,
+                tag_color: tagColor
             });
-        } catch {
-            return dateStr;
+            setTitle('');
+            setSummary('');
+            setIsOpen(false);
+            loadAnnouncements();
+        } catch (err: any) {
+            setSubmitError(err.response?.data?.detail || 'Failed to post announcement.');
         }
     };
+
+    const handleDelete = async (id: number) => {
+        if (!confirm('Are you sure you want to delete this announcement?')) return;
+        try {
+            await deleteAnnouncement(id);
+            loadAnnouncements();
+        } catch (err: any) {
+            alert('Failed to delete announcement.');
+        }
+    };
+
+    const filtered = announcements.filter(ann => 
+        ann.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        ann.summary.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        ann.tag.toLowerCase().includes(searchTerm.toLowerCase())
+    );
 
     return (
         <div className="space-y-6 max-w-7xl mx-auto">
@@ -86,155 +92,178 @@ export default function AnnouncementsPage() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-200/80 pb-5 gap-4">
                 <div>
                     <h1 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
-                        <Bell className="w-6 h-6 text-[#0052FF]" />
-                        Notifications & Announcements
+                        <Megaphone className="w-6 h-6 text-[#0052FF]" />
+                        Company Announcements
                     </h1>
                     <p className="text-xs text-slate-500 mt-1">
-                        Stay updated with HR alerts, leave approvals, payroll updates, and company-wide notices.
+                        Stay updated with corporate bulletins, policy shifts, holiday news, and HR alerts.
                     </p>
                 </div>
-                <div className="flex items-center gap-2 self-start sm:self-auto">
-                    <button
-                        onClick={loadNotifications}
-                        disabled={loading}
-                        className="p-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-500 transition-all shadow-sm disabled:opacity-50"
-                        title="Refresh"
+                {isAdmin && (
+                    <Button 
+                        onClick={() => {
+                            setSubmitError('');
+                            setIsOpen(true);
+                        }}
+                        className="bg-[#0052FF] hover:bg-blue-700 text-white text-xs font-black px-4 h-10 rounded-xl shadow-md flex items-center gap-1.5 self-start sm:self-auto"
                     >
-                        <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-                    </button>
-                    <button
-                        onClick={handleMarkAllRead}
-                        disabled={markingAll || unreadCount === 0}
-                        className="px-4 py-2 bg-white hover:bg-slate-50 border border-slate-200 text-xs font-bold text-slate-700 rounded-xl transition-all shadow-sm disabled:opacity-40"
-                    >
-                        {markingAll ? 'Marking...' : 'Mark all as read'}
-                    </button>
-                </div>
+                        <Plus className="w-4 h-4" />
+                        <span>Post Notice</span>
+                    </Button>
+                )}
             </div>
 
-            {/* Filters */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm">
-                <div className="relative sm:col-span-2">
-                    <Search className="w-4 h-4 absolute left-3.5 top-3.5 text-slate-400" />
-                    <input
-                        type="text"
-                        placeholder="Search notifications..."
-                        className="w-full pl-10 pr-4 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0052FF]/30 focus:border-[#0052FF]"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                    />
-                </div>
-                <button
-                    onClick={() => setShowUnreadOnly(!showUnreadOnly)}
-                    className={`h-10 px-4 text-xs font-bold rounded-xl border transition-all ${
-                        showUnreadOnly
-                            ? 'bg-[#0052FF] text-white border-[#0052FF]'
-                            : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
-                    }`}
-                >
-                    {showUnreadOnly ? `Showing Unread (${unreadCount})` : `All Notifications (${notifications.length})`}
-                </button>
+            {/* Search Bar */}
+            <div className="relative">
+                <Search className="w-4 h-4 absolute left-3.5 top-3.5 text-slate-400" />
+                <input
+                    type="text"
+                    placeholder="Search announcements..."
+                    className="w-full pl-10 pr-4 py-2.5 text-xs bg-white border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0052FF]/30 focus:border-[#0052FF] shadow-2xs"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                />
             </div>
 
-            {/* Stats Bar */}
-            {!loading && notifications.length > 0 && (
-                <div className="flex items-center gap-4 text-xs text-slate-500">
-                    <span className="font-semibold">
-                        <span className="text-[#0052FF] font-black">{unreadCount}</span> unread
-                    </span>
-                    <span>·</span>
-                    <span>{notifications.length} total notifications</span>
-                </div>
-            )}
-
-            {/* Content */}
+            {/* List Content */}
             {loading ? (
-                <div className="space-y-3">
-                    {[1, 2, 3].map(i => (
-                        <div key={i} className="bg-white rounded-2xl border border-slate-200/80 p-5 animate-pulse">
-                            <div className="h-4 bg-slate-100 rounded w-3/4 mb-2" />
-                            <div className="h-3 bg-slate-100 rounded w-full mb-1" />
-                            <div className="h-3 bg-slate-100 rounded w-2/3" />
-                        </div>
-                    ))}
+                <div className="flex justify-center items-center py-20 bg-white rounded-2xl border border-slate-200">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#0052FF]" />
                 </div>
             ) : error ? (
-                <Card className="bg-white border-slate-200/80 rounded-2xl shadow-sm">
-                    <CardContent className="p-12 text-center space-y-3">
-                        <AlertCircle className="w-8 h-8 text-red-400 mx-auto" />
-                        <p className="font-semibold text-sm text-red-600">{error}</p>
-                        <button
-                            onClick={loadNotifications}
-                            className="text-xs font-bold text-[#0052FF] hover:underline"
-                        >
-                            Try again
-                        </button>
-                    </CardContent>
-                </Card>
+                <div className="flex items-center gap-3 p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl text-xs">
+                    <AlertCircle className="w-4 h-4 text-red-500 shrink-0" />
+                    <span>{error}</span>
+                </div>
             ) : filtered.length === 0 ? (
-                <Card className="bg-white border-slate-200/80 rounded-2xl shadow-sm">
-                    <CardContent className="p-12 text-center text-slate-500 space-y-2">
-                        <Megaphone className="w-8 h-8 text-slate-300 mx-auto" />
-                        <p className="font-semibold text-sm">
-                            {notifications.length === 0
-                                ? 'No notifications yet'
-                                : 'No notifications match your search'}
-                        </p>
-                        <p className="text-xs text-slate-400">
-                            {notifications.length === 0
-                                ? 'System notifications such as leave approvals and payroll updates will appear here.'
-                                : 'Try adjusting your search or filter.'}
-                        </p>
-                    </CardContent>
-                </Card>
+                <div className="text-center py-20 bg-white rounded-2xl border border-slate-200 space-y-3">
+                    <Megaphone className="w-10 h-10 text-slate-300 mx-auto" />
+                    <p className="font-bold text-slate-800 text-sm">No bulletins posted</p>
+                    <p className="text-xs text-slate-400">Company announcements will be displayed here when published.</p>
+                </div>
             ) : (
-                <div className="space-y-3">
-                    {filtered.map(n => (
-                        <Card
-                            key={n.id}
-                            onClick={() => !n.read && handleMarkRead(n.id)}
-                            className={`transition-all border-slate-200/80 hover:border-slate-300 rounded-2xl shadow-xs hover:shadow-md ${
-                                !n.read
-                                    ? 'bg-blue-50/30 border-l-4 border-l-[#0052FF] cursor-pointer'
-                                    : 'bg-white cursor-default'
-                            }`}
-                        >
-                            <CardContent className="p-5 space-y-2">
-                                <div className="flex items-start justify-between gap-3">
-                                    <div className="flex items-start gap-3 flex-1 min-w-0">
-                                        <div className={`w-8 h-8 rounded-xl shrink-0 flex items-center justify-center ${
-                                            !n.read ? 'bg-[#0052FF]/10 text-[#0052FF]' : 'bg-slate-100 text-slate-400'
-                                        }`}>
-                                            <Bell className="w-4 h-4" />
-                                        </div>
-                                        <div className="min-w-0 flex-1">
-                                            <div className="flex items-center gap-2 flex-wrap mb-0.5">
-                                                <h3 className="font-bold text-sm text-slate-900 leading-snug">{n.title}</h3>
-                                                {!n.read && (
-                                                    <span className="w-2 h-2 rounded-full bg-[#0052FF] shrink-0" />
-                                                )}
-                                            </div>
-                                            <p className="text-xs text-slate-600 leading-relaxed">{n.message}</p>
-                                        </div>
-                                    </div>
-                                    <div className="shrink-0 text-right">
-                                        <span className="text-[10px] text-slate-400 font-semibold block whitespace-nowrap">
-                                            {formatDate(n.created_at)}
+                <div className="space-y-4">
+                    {filtered.map(ann => (
+                        <Card key={ann.id} className="border border-slate-200/80 bg-white rounded-2xl shadow-2xs hover:shadow-sm transition-all duration-200">
+                            <CardContent className="p-5 flex items-start justify-between gap-4">
+                                <div className="space-y-2">
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                        <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded border ${ann.tag_color}`}>
+                                            {ann.tag}
+                                        </span>
+                                        <span className="text-[10px] text-slate-400 font-bold font-mono">
+                                            {ann.date}
                                         </span>
                                     </div>
+                                    <h3 className="font-black text-slate-900 text-sm sm:text-base">{ann.title}</h3>
+                                    <p className="text-slate-600 text-xs leading-relaxed max-w-4xl">{ann.summary}</p>
                                 </div>
 
-                                {!n.read && (
-                                    <div className="flex justify-end pt-1">
-                                        <span className="text-[10px] text-[#0052FF] flex items-center gap-1 font-bold">
-                                            <CheckCircle2 className="w-3 h-3" />
-                                            Click to mark as read
-                                        </span>
-                                    </div>
+                                {isAdmin && (
+                                    <button 
+                                        onClick={() => handleDelete(ann.id)}
+                                        className="text-slate-400 hover:text-red-600 transition-colors p-2 rounded-xl border border-slate-200 bg-slate-50 hover:bg-red-50 shrink-0 shadow-2xs"
+                                        title="Delete notice"
+                                    >
+                                        <Trash2 className="w-4 h-4" />
+                                    </button>
                                 )}
                             </CardContent>
                         </Card>
                     ))}
+                </div>
+            )}
+
+            {/* Post Announcement Modal */}
+            {isOpen && (
+                <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+                    <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 animate-in zoom-in-95 duration-200">
+                        <div className="flex justify-between items-center border-b border-slate-100 pb-3 mb-4">
+                            <h3 className="font-black text-slate-900 text-base flex items-center gap-1.5">
+                                <Megaphone className="w-5 h-5 text-[#0052FF]" />
+                                <span>Post Announcement</span>
+                            </h3>
+                            <button onClick={() => setIsOpen(false)} className="text-slate-400 hover:text-slate-600 text-lg">×</button>
+                        </div>
+
+                        <form onSubmit={handleCreate} className="space-y-4 text-xs font-bold">
+                            {submitError && (
+                                <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-xl leading-relaxed">
+                                    {submitError}
+                                </div>
+                            )}
+
+                            <div>
+                                <label className="block text-[10px] text-slate-400 uppercase tracking-wider mb-1.5">Bulletin Title</label>
+                                <Input 
+                                    placeholder="Enter title (e.g. Town Hall Meeting)" 
+                                    className="h-10 text-xs rounded-xl"
+                                    value={title}
+                                    onChange={(e) => setTitle(e.target.value)}
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label className="block text-[10px] text-slate-400 uppercase tracking-wider mb-1.5">Tag Label</label>
+                                    <select
+                                        className="w-full h-10 px-3 border rounded-xl bg-slate-50 border-slate-200 text-slate-700"
+                                        value={tag}
+                                        onChange={(e) => {
+                                            const val = e.target.value;
+                                            setTag(val);
+                                            if (val === 'Alert') setTagColor('bg-red-50 text-red-600 border-red-100');
+                                            else if (val === 'Policy') setTagColor('bg-purple-50 text-purple-600 border-purple-100');
+                                            else if (val === 'Event') setTagColor('bg-emerald-50 text-emerald-600 border-emerald-100');
+                                            else setTagColor('bg-blue-50 text-[#0052FF] border-blue-100');
+                                        }}
+                                    >
+                                        <option value="Notice">Notice</option>
+                                        <option value="Alert">Alert</option>
+                                        <option value="Policy">Policy</option>
+                                        <option value="Event">Event</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label className="block text-[10px] text-slate-400 uppercase tracking-wider mb-1.5">Tag Style</label>
+                                    <input 
+                                        className="w-full h-10 px-3 border rounded-xl bg-slate-100 border-slate-200 text-slate-500 font-mono select-all"
+                                        value={tagColor}
+                                        readOnly
+                                    />
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-[10px] text-slate-400 uppercase tracking-wider mb-1.5">Message summary</label>
+                                <textarea
+                                    rows={4}
+                                    placeholder="Type notice message details..."
+                                    className="w-full p-3 border border-slate-200 rounded-xl text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0052FF]/30 focus:border-[#0052FF]"
+                                    value={summary}
+                                    onChange={(e) => setSummary(e.target.value)}
+                                />
+                            </div>
+
+                            <div className="flex justify-end space-x-2 pt-2">
+                                <Button 
+                                    type="button" 
+                                    variant="outline" 
+                                    className="h-10 rounded-xl border-slate-200"
+                                    onClick={() => setIsOpen(false)}
+                                >
+                                    Cancel
+                                </Button>
+                                <Button 
+                                    type="submit" 
+                                    className="bg-[#0052FF] hover:bg-blue-700 text-white font-bold h-10 rounded-xl px-5"
+                                >
+                                    Publish
+                                </Button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             )}
         </div>

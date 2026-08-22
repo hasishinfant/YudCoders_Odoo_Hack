@@ -5,7 +5,7 @@ from datetime import datetime
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from app.core.database import SessionLocal, engine, Base
-from app.models import User, Employee, Department, LeaveType
+from app.models import User, Employee, Department, LeaveType, Announcement, Holiday
 from app.core.security import get_password_hash
 
 def seed_database():
@@ -165,8 +165,46 @@ def seed_database():
             db.add(manav_record)
             db.commit()
             print("[SUCCESS] Manav Nagpal created: manav.nagpal@dayflow.com / ManavPassword123!")
-        else:
-            print("[INFO] Manav Nagpal user already exists.")
+        # Seed Announcements
+        if db.query(Announcement).count() == 0:
+            announcements = [
+                Announcement(
+                    title="Quarterly Performance Cycle Review",
+                    summary="The Q3 feedback cycle starts next week. Please complete your self-evaluation form in the performance portal by end of this week.",
+                    date="Aug 20, 2026",
+                    tag="HR Notice",
+                    tag_color="bg-blue-50 text-[#0052FF] border-blue-100"
+                ),
+                Announcement(
+                    title="Independence Day Holiday & Event",
+                    summary="Office will remain closed on Saturday, August 15. Join us for a flag hoisting ceremony & high tea on Friday evening.",
+                    date="Aug 12, 2026",
+                    tag="Event",
+                    tag_color="bg-emerald-50 text-emerald-700 border-emerald-100"
+                ),
+                Announcement(
+                    title="New Office Location in Noida Sector 62",
+                    summary="Our new development hub is now fully operational! Contact facilities team to schedule hot-desking options.",
+                    date="Jul 28, 2026",
+                    tag="Facility",
+                    tag_color="bg-purple-50 text-purple-700 border-purple-100"
+                )
+            ]
+            db.bulk_save_objects(announcements)
+            db.commit()
+            print("[SUCCESS] Seeded announcements.")
+
+        # Seed Holidays
+        if db.query(Holiday).count() == 0:
+            holidays = [
+                Holiday(name="Ganesh Chaturthi", date=datetime.strptime("2026-09-15", "%Y-%m-%d").date(), type="Gazetted"),
+                Holiday(name="Gandhi Jayanti", date=datetime.strptime("2026-10-02", "%Y-%m-%d").date(), type="National"),
+                Holiday(name="Diwali (Deepavali)", date=datetime.strptime("2026-11-08", "%Y-%m-%d").date(), type="Gazetted"),
+                Holiday(name="Christmas Day", date=datetime.strptime("2026-12-25", "%Y-%m-%d").date(), type="Gazetted")
+            ]
+            db.bulk_save_objects(holidays)
+            db.commit()
+            print("[SUCCESS] Seeded holidays.")
 
         print("[SUCCESS] Database seeded successfully!")
 

@@ -7,6 +7,18 @@ import { getMyLeaveBalances, getMyLeaveRequests, type LeaveBalance, type LeaveRe
 import { getMySalary, type EmployeeSalary } from '@/services/payroll';
 import { getEmployeeReport } from '@/services/reports';
 import TodayAttendanceCard from '@/components/attendance/TodayAttendanceCard';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { 
+  getAnnouncements,
+  getHolidays,
+  createAnnouncement,
+  createHoliday,
+  deleteAnnouncement,
+  deleteHoliday,
+  type Announcement,
+  type Holiday
+} from '@/services/company';
 import { 
   Users, 
   Calendar, 
@@ -16,7 +28,12 @@ import {
   Building2,
   Sparkles,
   Zap,
-  BarChart3
+  BarChart3,
+  Megaphone,
+  Gift,
+  Trash2,
+  X,
+  AlertCircle
 } from 'lucide-react';
 
 export default function Dashboard() {
@@ -28,6 +45,24 @@ export default function Dashboard() {
   const [pendingLeaves, setPendingLeaves] = useState<LeaveRequest[]>([]);
   const [mySalary, setMySalary] = useState<EmployeeSalary | null>(null);
   const [adminReport, setAdminReport] = useState<any>(null);
+
+  // Dynamic Announcements & Holidays State
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [holidays, setHolidays] = useState<Holiday[]>([]);
+
+  // Admin Manager Modals State
+  const [isAddAnnOpen, setIsAddAnnOpen] = useState(false);
+  const [newAnnTitle, setNewAnnTitle] = useState('');
+  const [newAnnSummary, setNewAnnSummary] = useState('');
+  const [newAnnTag, setNewAnnTag] = useState('Notice');
+  const [newAnnTagColor, setNewAnnTagColor] = useState('bg-blue-50 text-[#0052FF] border-blue-100');
+  const [annError, setAnnError] = useState('');
+
+  const [isAddHolOpen, setIsAddHolOpen] = useState(false);
+  const [newHolName, setNewHolName] = useState('');
+  const [newHolDate, setNewHolDate] = useState('');
+  const [newHolType, setNewHolType] = useState('Gazetted');
+  const [holError, setHolError] = useState('');
 
   const fetchDashboardData = async () => {
     try {
@@ -45,7 +80,9 @@ export default function Dashboard() {
         getMyLeaveBalances().catch(() => ({ data: [] })),
         getMyLeaveRequests().catch(() => ({ data: [] })),
         getMySalary().catch(() => ({ data: null })),
-        getMyAttendance({ start_date: weekStart, end_date: weekEnd, limit: 7 }).catch(() => ({ data: [] }))
+        getMyAttendance({ start_date: weekStart, end_date: weekEnd, limit: 7 }).catch(() => ({ data: [] })),
+        getAnnouncements().catch(() => ({ data: [] })),
+        getHolidays().catch(() => ({ data: [] }))
       ];
 
       if (isAdmin) {
@@ -58,8 +95,10 @@ export default function Dashboard() {
       setPendingLeaves((results[2]?.data || []).filter((r: LeaveRequest) => r.status === 'PENDING'));
       setMySalary(results[3]?.data || null);
       setWeeklyAttendance(results[4]?.data || []);
+      setAnnouncements(results[5]?.data || []);
+      setHolidays(results[6]?.data || []);
       if (isAdmin) {
-        setAdminReport(results[5]?.data || null);
+        setAdminReport(results[7]?.data || null);
       }
     } catch (err) {
       console.error('Failed to fetch dashboard metrics', err);
@@ -69,6 +108,73 @@ export default function Dashboard() {
   useEffect(() => {
     fetchDashboardData();
   }, []);
+
+  const handleCreateAnnouncement = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAnnError('');
+    if (!newAnnTitle.trim() || !newAnnSummary.trim()) {
+      setAnnError('Title and Summary are required.');
+      return;
+    }
+    try {
+      const nowStr = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      await createAnnouncement({
+        title: newAnnTitle,
+        summary: newAnnSummary,
+        date: nowStr,
+        tag: newAnnTag,
+        tag_color: newAnnTagColor
+      });
+      setNewAnnTitle('');
+      setNewAnnSummary('');
+      setIsAddAnnOpen(false);
+      fetchDashboardData();
+    } catch (err: any) {
+      setAnnError(err.response?.data?.detail || 'Failed to post announcement.');
+    }
+  };
+
+  const handleDeleteAnnouncement = async (id: number) => {
+    if (!confirm('Are you sure you want to delete this announcement?')) return;
+    try {
+      await deleteAnnouncement(id);
+      fetchDashboardData();
+    } catch (err) {
+      console.error('Failed to delete announcement', err);
+    }
+  };
+
+  const handleCreateHoliday = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setHolError('');
+    if (!newHolName.trim() || !newHolDate) {
+      setHolError('Holiday Name and Date are required.');
+      return;
+    }
+    try {
+      await createHoliday({
+        name: newHolName,
+        date: newHolDate,
+        type: newHolType
+      });
+      setNewHolName('');
+      setNewHolDate('');
+      setIsAddHolOpen(false);
+      fetchDashboardData();
+    } catch (err: any) {
+      setHolError(err.response?.data?.detail || 'Failed to add holiday.');
+    }
+  };
+
+  const handleDeleteHoliday = async (id: number) => {
+    if (!confirm('Are you sure you want to remove this holiday?')) return;
+    try {
+      await deleteHoliday(id);
+      fetchDashboardData();
+    } catch (err) {
+      console.error('Failed to delete holiday', err);
+    }
+  };
 
   const formatCurrency = (val?: number) => {
     if (!val) return '₹0.00';
@@ -162,78 +268,86 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         {isAdmin && adminReport && (
           <>
-            <Card className="bg-white border-sky-100/80 shadow-sm rounded-2xl p-5 hover:-translate-y-1 hover:shadow-xl hover:border-sky-200 transition-all duration-300 group">
-              <div className="flex justify-between items-start">
-                <div>
-                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Total Headcount</span>
-                  <span className="text-3xl font-black font-mono text-slate-900 mt-1 block group-hover:text-sky-600 transition-colors">
-                    {adminReport.total_employees}
-                  </span>
+            <Link to="/employees" className="block transform hover:scale-[1.02] transition-transform duration-200">
+              <Card className="bg-white border-sky-100/80 shadow-sm rounded-2xl p-5 hover:shadow-xl hover:border-sky-200 transition-all duration-300 group h-full cursor-pointer">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Total Headcount</span>
+                    <span className="text-3xl font-black font-mono text-slate-900 mt-1 block group-hover:text-[#0052FF] transition-colors">
+                      {adminReport.total_employees}
+                    </span>
+                  </div>
+                  <div className="p-3 bg-sky-50 rounded-2xl text-[#0052FF] group-hover:scale-110 transition-transform">
+                    <Users className="w-5 h-5" />
+                  </div>
                 </div>
-                <div className="p-3 bg-sky-50 rounded-2xl text-sky-600 group-hover:scale-110 transition-transform">
-                  <Users className="w-5 h-5" />
+                <div className="mt-3 flex items-center text-[11px] text-slate-500 font-semibold space-x-1">
+                  <span className="text-[#0052FF] font-bold">{adminReport.active_employees} Active</span>
+                  <span>• {adminReport.inactive_employees} Inactive</span>
                 </div>
-              </div>
-              <div className="mt-3 flex items-center text-[11px] text-slate-500 font-semibold space-x-1">
-                <span className="text-sky-600 font-bold">{adminReport.active_employees} Active</span>
-                <span>• {adminReport.inactive_employees} Inactive</span>
-              </div>
-            </Card>
+              </Card>
+            </Link>
 
-            <Card className="bg-white border-sky-100/80 shadow-sm rounded-2xl p-5 hover:-translate-y-1 hover:shadow-xl hover:border-sky-200 transition-all duration-300 group">
-              <div className="flex justify-between items-start">
-                <div>
-                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Departments</span>
-                  <span className="text-3xl font-black font-mono text-slate-900 mt-1 block group-hover:text-indigo-600 transition-colors">
-                    {adminReport.department_breakdown?.length || 0}
-                  </span>
+            <Link to="/employees" className="block transform hover:scale-[1.02] transition-transform duration-200">
+              <Card className="bg-white border-sky-100/80 shadow-sm rounded-2xl p-5 hover:shadow-xl hover:border-sky-200 transition-all duration-300 group h-full cursor-pointer">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Departments</span>
+                    <span className="text-3xl font-black font-mono text-slate-900 mt-1 block group-hover:text-indigo-600 transition-colors">
+                      {adminReport.department_breakdown?.length || 0}
+                    </span>
+                  </div>
+                  <div className="p-3 bg-blue-50 rounded-2xl text-blue-600 group-hover:scale-110 transition-transform">
+                    <Building2 className="w-5 h-5" />
+                  </div>
                 </div>
-                <div className="p-3 bg-blue-50 rounded-2xl text-blue-600 group-hover:scale-110 transition-transform">
-                  <Building2 className="w-5 h-5" />
+                <div className="mt-3 text-[11px] text-slate-500 font-semibold">
+                  <span>Active Organizational Units</span>
                 </div>
-              </div>
-              <div className="mt-3 text-[11px] text-slate-500 font-semibold">
-                <span>Active Organizational Units</span>
-              </div>
-            </Card>
+              </Card>
+            </Link>
           </>
         )}
 
         {!isAdmin && (
-          <Card className="bg-white border-sky-100/80 shadow-sm rounded-2xl p-5 hover:-translate-y-1 hover:shadow-xl hover:border-sky-200 transition-all duration-300 group">
+          <Link to="/payroll" className="block transform hover:scale-[1.02] transition-transform duration-200">
+            <Card className="bg-white border-sky-100/80 shadow-sm rounded-2xl p-5 hover:shadow-xl hover:border-sky-200 transition-all duration-300 group cursor-pointer">
+              <div className="flex justify-between items-start">
+                <div>
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Net Take-Home Pay</span>
+                  <span className="text-3xl font-black font-mono text-[#0052FF] mt-1 block group-hover:scale-105 transition-transform origin-left">
+                    {formatCurrency(mySalary?.net_salary)}
+                  </span>
+                </div>
+                <div className="p-3 bg-blue-50 rounded-2xl text-[#0052FF] group-hover:scale-110 transition-transform">
+                  <DollarSign className="w-5 h-5" />
+                </div>
+              </div>
+              <div className="mt-3 text-[11px] text-slate-500 font-semibold">
+                <span>Gross: {formatCurrency(mySalary?.gross_salary)}</span>
+              </div>
+            </Card>
+          </Link>
+        )}
+
+        <Link to="/time-off" className="block transform hover:scale-[1.02] transition-transform duration-200">
+          <Card className="bg-white border-sky-100/80 shadow-sm rounded-2xl p-5 hover:shadow-xl hover:border-sky-200 transition-all duration-300 group h-full cursor-pointer">
             <div className="flex justify-between items-start">
               <div>
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Net Take-Home Pay</span>
-                <span className="text-3xl font-black font-mono text-sky-600 mt-1 block group-hover:scale-105 transition-transform origin-left">
-                  {formatCurrency(mySalary?.net_salary)}
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Pending Leave Requests</span>
+                <span className="text-3xl font-black font-mono text-amber-600 mt-1 block">
+                  {pendingLeaves.length}
                 </span>
               </div>
-              <div className="p-3 bg-sky-50 rounded-2xl text-sky-600 group-hover:scale-110 transition-transform">
-                <DollarSign className="w-5 h-5" />
+              <div className="p-3 bg-amber-50 rounded-2xl text-amber-600 group-hover:scale-110 transition-transform">
+                <Calendar className="w-5 h-5" />
               </div>
             </div>
             <div className="mt-3 text-[11px] text-slate-500 font-semibold">
-              <span>Gross: {formatCurrency(mySalary?.gross_salary)}</span>
+              <span>Awaiting approval action</span>
             </div>
           </Card>
-        )}
-
-        <Card className="bg-white border-sky-100/80 shadow-sm rounded-2xl p-5 hover:-translate-y-1 hover:shadow-xl hover:border-sky-200 transition-all duration-300 group">
-          <div className="flex justify-between items-start">
-            <div>
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Pending Leave Requests</span>
-              <span className="text-3xl font-black font-mono text-amber-600 mt-1 block">
-                {pendingLeaves.length}
-              </span>
-            </div>
-            <div className="p-3 bg-amber-50 rounded-2xl text-amber-600 group-hover:scale-110 transition-transform">
-              <Calendar className="w-5 h-5" />
-            </div>
-          </div>
-          <div className="mt-3 text-[11px] text-slate-500 font-semibold">
-            <span>Awaiting approval action</span>
-          </div>
-        </Card>
+        </Link>
       </div>
 
       {/* Main Content Viewport */}
@@ -278,6 +392,59 @@ export default function Dashboard() {
               </div>
             </Card>
           )}
+
+          {/* Latest Announcements notice board */}
+          <Card className="bg-white border-sky-100/80 shadow-sm rounded-2xl p-6">
+            <div className="flex items-center justify-between mb-6 pb-3 border-b border-slate-100">
+              <div>
+                <h3 className="font-extrabold text-slate-900 text-base flex items-center space-x-2">
+                  <Megaphone className="w-4 h-4 text-[#0052FF]" />
+                  <span>Company Announcements</span>
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">Stay updated with latest corporate news & policy changes</p>
+              </div>
+              {isAdmin && (
+                <Button 
+                  onClick={() => {
+                    setAnnError('');
+                    setIsAddAnnOpen(true);
+                  }}
+                  className="bg-[#0052FF] hover:bg-blue-700 text-white text-xs font-black px-3.5 h-8 rounded-xl shadow-sm"
+                >
+                  <Plus className="w-3.5 h-3.5 mr-1" />
+                  Post Notice
+                </Button>
+              )}
+            </div>
+
+            <div className="space-y-4">
+              {announcements.length === 0 ? (
+                <p className="text-xs text-slate-400 italic text-center py-6">No announcements published yet.</p>
+              ) : (
+                announcements.map(ann => (
+                  <div key={ann.id} className="p-4 rounded-2xl bg-slate-50 hover:bg-slate-100/60 transition-colors border border-slate-100 flex items-start justify-between gap-3 group/ann">
+                    <div className="space-y-1">
+                      <div className="flex items-center space-x-2 flex-wrap gap-y-1">
+                        <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded border ${ann.tag_color}`}>{ann.tag}</span>
+                        <span className="text-[10px] text-slate-400 font-bold font-mono">{ann.date}</span>
+                      </div>
+                      <h4 className="font-bold text-slate-900 text-xs sm:text-sm">{ann.title}</h4>
+                      <p className="text-slate-600 text-xs leading-relaxed max-w-2xl">{ann.summary}</p>
+                    </div>
+                    {isAdmin && (
+                      <button 
+                        onClick={() => handleDeleteAnnouncement(ann.id)}
+                        className="text-slate-400 hover:text-red-600 transition-colors p-1 rounded-md border border-slate-200 bg-white shadow-xs opacity-0 group-hover/ann:opacity-100 shrink-0"
+                        title="Delete Announcement"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+          </Card>
         </div>
 
         {/* Right Column: Time Off & Portal Navigation */}
@@ -404,8 +571,236 @@ export default function Dashboard() {
               )}
             </div>
           </Card>
+
+          {/* Upcoming Holidays list */}
+          <Card className="bg-white border-sky-100/80 shadow-sm rounded-2xl overflow-hidden">
+            <CardHeader className="border-b border-slate-100 pb-4 flex flex-row items-center justify-between space-y-0">
+              <CardTitle className="text-base font-bold text-slate-900 flex items-center space-x-2">
+                <Gift className="w-4 h-4 text-[#0052FF]" />
+                <span>Upcoming Holidays</span>
+              </CardTitle>
+              {isAdmin && (
+                <button
+                  onClick={() => {
+                    setHolError('');
+                    setIsAddHolOpen(true);
+                  }}
+                  className="p-1 text-slate-500 hover:text-[#0052FF] transition-colors hover:bg-slate-50 rounded-lg border border-slate-150"
+                  title="Add Holiday"
+                >
+                  <Plus className="w-4 h-4" />
+                </button>
+              )}
+            </CardHeader>
+            <CardContent className="p-5 space-y-3.5">
+              {holidays.length === 0 ? (
+                <p className="text-xs text-slate-400 italic text-center py-4">No holidays listed.</p>
+              ) : (
+                holidays.map(h => (
+                  <div key={h.id} className="flex justify-between items-center text-xs pb-2 border-b border-slate-50 last:border-0 last:pb-0 group/hol">
+                    <div>
+                      <h5 className="font-bold text-slate-800">{h.name}</h5>
+                      <span className="text-[10px] text-slate-400 font-medium">
+                        {new Date(h.date).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' })}
+                      </span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-[9px] font-black uppercase bg-blue-50 text-[#0052FF] px-2 py-0.5 rounded border border-blue-100">{h.type}</span>
+                      {isAdmin && (
+                        <button
+                          onClick={() => handleDeleteHoliday(h.id)}
+                          className="text-slate-400 hover:text-red-600 transition-colors p-0.5 rounded border border-slate-200 bg-white opacity-0 group-hover/hol:opacity-100"
+                          title="Delete Holiday"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))
+              )}
+            </CardContent>
+          </Card>
         </div>
       </div>
+
+      {/* Post Announcement Modal */}
+      {isAdmin && isAddAnnOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 overflow-y-auto">
+          <Card className="w-full max-w-md bg-white border-slate-200 shadow-2xl overflow-hidden rounded-2xl animate-in fade-in zoom-in duration-200">
+            <div className="bg-slate-900 text-white p-5 flex flex-row items-center justify-between space-y-0">
+              <div className="text-lg font-bold text-white flex items-center space-x-2">
+                <Megaphone className="w-5 h-5 text-[#0052FF]" />
+                <span>Post Announcement</span>
+              </div>
+              <button 
+                onClick={() => setIsAddAnnOpen(false)}
+                className="text-slate-400 hover:text-white transition-colors p-1 rounded-md"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <CardContent className="p-6 space-y-4">
+              {annError && (
+                <div className="bg-red-50 text-red-600 p-3.5 rounded-xl flex items-center text-xs font-semibold border border-red-200">
+                  <AlertCircle className="w-4 h-4 mr-2 shrink-0" />
+                  {annError}
+                </div>
+              )}
+
+              <form onSubmit={handleCreateAnnouncement} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Announcement Title *</label>
+                  <Input 
+                    className="h-10 text-xs rounded-xl"
+                    placeholder="Enter short, descriptive title"
+                    value={newAnnTitle}
+                    onChange={(e) => setNewAnnTitle(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Summary *</label>
+                  <textarea 
+                    className="w-full min-h-[80px] p-3 text-xs border rounded-xl bg-white border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#0052FF]/35 font-medium text-slate-700"
+                    placeholder="Enter summary details of the announcement"
+                    value={newAnnSummary}
+                    onChange={(e) => setNewAnnSummary(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">Tag Name</label>
+                    <Input 
+                      className="h-10 text-xs rounded-xl"
+                      placeholder="e.g. Facility, Notice, Event"
+                      value={newAnnTag}
+                      onChange={(e) => setNewAnnTag(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">Tag Styling</label>
+                    <select
+                      className="w-full h-10 px-3 text-xs border rounded-xl bg-white border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#0052FF]/35 font-semibold text-slate-700"
+                      value={newAnnTagColor}
+                      onChange={(e) => setNewAnnTagColor(e.target.value)}
+                    >
+                      <option value="bg-blue-50 text-[#0052FF] border-blue-100">Blue (Notice)</option>
+                      <option value="bg-emerald-50 text-emerald-700 border-emerald-100">Green (Event)</option>
+                      <option value="bg-purple-50 text-purple-700 border-purple-100">Purple (Facility)</option>
+                      <option value="bg-amber-50 text-amber-700 border-amber-100">Amber (Warning)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="flex justify-end space-x-3 pt-3 border-t border-slate-100">
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={() => setIsAddAnnOpen(false)} 
+                    className="text-xs font-semibold rounded-xl"
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    type="submit" 
+                    className="bg-[#0052FF] hover:bg-blue-700 text-white font-bold text-xs px-5 rounded-xl shadow-md"
+                  >
+                    Post Notice
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Add Holiday Modal */}
+      {isAdmin && isAddHolOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 overflow-y-auto">
+          <Card className="w-full max-w-md bg-white border-slate-200 shadow-2xl overflow-hidden rounded-2xl animate-in fade-in zoom-in duration-200">
+            <div className="bg-slate-900 text-white p-5 flex flex-row items-center justify-between space-y-0">
+              <div className="text-lg font-bold text-white flex items-center space-x-2">
+                <Gift className="w-5 h-5 text-[#0052FF]" />
+                <span>Add Company Holiday</span>
+              </div>
+              <button 
+                onClick={() => setIsAddHolOpen(false)}
+                className="text-slate-400 hover:text-white transition-colors p-1 rounded-md"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <CardContent className="p-6 space-y-4">
+              {holError && (
+                <div className="bg-red-50 text-red-600 p-3.5 rounded-xl flex items-center text-xs font-semibold border border-red-200">
+                  <AlertCircle className="w-4 h-4 mr-2 shrink-0" />
+                  {holError}
+                </div>
+              )}
+
+              <form onSubmit={handleCreateHoliday} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Holiday Name *</label>
+                  <Input 
+                    className="h-10 text-xs rounded-xl"
+                    placeholder="e.g. Independence Day"
+                    value={newHolName}
+                    onChange={(e) => setNewHolName(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Date *</label>
+                  <Input 
+                    type="date"
+                    className="h-10 text-xs rounded-xl"
+                    value={newHolDate}
+                    onChange={(e) => setNewHolDate(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Holiday Type</label>
+                  <select
+                    className="w-full h-10 px-3 text-xs border rounded-xl bg-white border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#0052FF]/35 font-semibold text-slate-700"
+                    value={newHolType}
+                    onChange={(e) => setNewHolType(e.target.value)}
+                  >
+                    <option value="Gazetted">Gazetted</option>
+                    <option value="National">National</option>
+                    <option value="Restricted">Restricted</option>
+                  </select>
+                </div>
+
+                <div className="flex justify-end space-x-3 pt-3 border-t border-slate-100">
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={() => setIsAddHolOpen(false)} 
+                    className="text-xs font-semibold rounded-xl"
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    type="submit" 
+                    className="bg-[#0052FF] hover:bg-blue-700 text-white font-bold text-xs px-5 rounded-xl shadow-md"
+                  >
+                    Add Holiday
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }
