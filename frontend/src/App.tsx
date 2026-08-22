@@ -13,6 +13,11 @@ import TimeOffPage from './pages/TimeOff';
 import PayrollPage from './pages/Payroll';
 import DocumentsPage from './pages/Documents';
 import ReportsPage from './pages/Reports';
+import AnnouncementsPage from './pages/Announcements';
+import HelpSupportPage from './pages/HelpSupport';
+import SettingsPage from './pages/Settings';
+import PerformancePage from './pages/Performance';
+import CalendarPage from './pages/Calendar';
 import { ProtectedRoute } from './routes/ProtectedRoute';
 
 function App() {
@@ -36,12 +41,12 @@ function App() {
               <Route path="documents" element={<DocumentsPage />} />
               <Route path="profile" element={<EmployeeDetail isSelfProfile />} />
 
-              {/* Navigation Module Fallbacks */}
-              <Route path="calendar" element={<AttendancePage />} />
-              <Route path="performance" element={<EmployeeDetail isSelfProfile />} />
-              <Route path="announcements" element={<Dashboard />} />
-              <Route path="help" element={<EmployeeDetail isSelfProfile />} />
-              <Route path="settings" element={<EmployeeDetail isSelfProfile />} />
+              {/* Active Functional Pages */}
+              <Route path="calendar" element={<CalendarPage />} />
+              <Route path="performance" element={<PerformancePage />} />
+              <Route path="announcements" element={<AnnouncementsPage />} />
+              <Route path="help" element={<HelpSupportPage />} />
+              <Route path="settings" element={<SettingsPage />} />
               
               {/* Admin Protected Routes */}
               <Route element={<ProtectedRoute allowedRoles={['ADMIN']} />}>

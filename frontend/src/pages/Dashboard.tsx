@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { getTodayAttendance, type AttendanceRecord } from '@/services/attendance';
+import { getTodayAttendance, getMyAttendance, type AttendanceRecord } from '@/services/attendance';
 import { getMyLeaveBalances, getMyLeaveRequests, type LeaveBalance, type LeaveRequest } from '@/services/leave';
 import { getMySalary, type EmployeeSalary } from '@/services/payroll';
 import { getEmployeeReport } from '@/services/reports';
@@ -31,11 +31,21 @@ export default function Dashboard() {
 
   const fetchDashboardData = async () => {
     try {
+      const now = new Date();
+      const day = now.getDay();
+      const monday = new Date(now);
+      monday.setDate(now.getDate() - ((day + 6) % 7));
+      const sunday = new Date(monday);
+      sunday.setDate(monday.getDate() + 6);
+      const weekStart = monday.toISOString().split('T')[0];
+      const weekEnd = sunday.toISOString().split('T')[0];
+
       const promises: Promise<any>[] = [
         getTodayAttendance().catch(() => ({ data: null })),
         getMyLeaveBalances().catch(() => ({ data: [] })),
         getMyLeaveRequests().catch(() => ({ data: [] })),
-        getMySalary().catch(() => ({ data: null }))
+        getMySalary().catch(() => ({ data: null })),
+        getMyAttendance({ start_date: weekStart, end_date: weekEnd, limit: 7 }).catch(() => ({ data: [] }))
       ];
 
       if (isAdmin) {
@@ -47,8 +57,9 @@ export default function Dashboard() {
       setLeaveBalances(results[1]?.data || []);
       setPendingLeaves((results[2]?.data || []).filter((r: LeaveRequest) => r.status === 'PENDING'));
       setMySalary(results[3]?.data || null);
+      setWeeklyAttendance(results[4]?.data || []);
       if (isAdmin) {
-        setAdminReport(results[4]?.data || null);
+        setAdminReport(results[5]?.data || null);
       }
     } catch (err) {
       console.error('Failed to fetch dashboard metrics', err);
@@ -71,15 +82,35 @@ export default function Dashboard() {
     return 'Good evening';
   };
 
-  // Mock weekly trend chart bars
-  const weeklyAttendanceMock = [
-    { day: 'Mon', hours: 8.5, height: '85%' },
-    { day: 'Tue', hours: 9.0, height: '90%' },
-    { day: 'Wed', hours: 8.0, height: '80%' },
-    { day: 'Thu', hours: 8.8, height: '88%' },
-    { day: 'Fri', hours: 9.2, height: '92%' },
-    { day: 'Sat', hours: 0, height: '10%' },
-  ];
+  const [weeklyAttendance, setWeeklyAttendance] = useState<AttendanceRecord[]>([]);
+
+  // Compute weekly bars from real attendance data
+  const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  const MAX_HOURS = 10;
+
+  const getWeekRange = () => {
+    const now = new Date();
+    const day = now.getDay(); // 0=Sun
+    const monday = new Date(now);
+    monday.setDate(now.getDate() - ((day + 6) % 7));
+    const sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 6);
+    return {
+      start: monday.toISOString().split('T')[0],
+      end: sunday.toISOString().split('T')[0]
+    };
+  };
+
+  const weeklyBars = DAY_LABELS.map((label, i) => {
+    const { start } = getWeekRange();
+    const targetDate = new Date(start);
+    targetDate.setDate(targetDate.getDate() + i);
+    const dateStr = targetDate.toISOString().split('T')[0];
+    const record = weeklyAttendance.find(r => r.date === dateStr);
+    const hours = record?.worked_hours || 0;
+    const pct = Math.min(100, Math.round((hours / MAX_HOURS) * 100));
+    return { day: label, hours: Number(hours).toFixed(1), height: `${Math.max(pct, record ? 5 : 0)}%`, hasData: !!record };
+  });
 
   return (
     <div className="space-y-8 max-w-7xl mx-auto animate-in fade-in duration-300">
