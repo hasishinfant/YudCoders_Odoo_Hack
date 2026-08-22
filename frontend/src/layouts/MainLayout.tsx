@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import NotificationBell from '@/components/notifications/NotificationBell';
+import CheckInSystray from '@/components/attendance/CheckInSystray';
 
 export default function MainLayout() {
   const { user, logout } = useAuth();
@@ -226,15 +227,8 @@ export default function MainLayout() {
             {/* Notification Bell */}
             <NotificationBell />
 
-            {/* Messages Icon */}
-            <div className="relative">
-              <button className="p-2 rounded-xl text-slate-500 hover:bg-slate-100 transition-colors" title="Messages">
-                <Mail className="w-5 h-5" />
-                <span className="absolute top-1 right-1 bg-amber-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center ring-2 ring-white">
-                  3
-                </span>
-              </button>
-            </div>
+            {/* Systray Check In/Out */}
+            <CheckInSystray />
 
             <div className="h-6 w-px bg-slate-200 hidden sm:block" />
 

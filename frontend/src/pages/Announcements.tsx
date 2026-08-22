@@ -145,8 +145,8 @@ export default function AnnouncementsPage() {
                 <div className="space-y-4">
                     {filtered.map(ann => (
                         <Card key={ann.id} className="border border-slate-200/80 bg-white rounded-2xl shadow-2xs hover:shadow-sm transition-all duration-200">
-                            <CardContent className="p-5 flex items-start justify-between gap-4">
-                                <div className="space-y-2">
+                            <CardContent className="p-5 flex flex-col sm:flex-row items-start justify-between gap-4">
+                                <div className="space-y-2 flex-1 min-w-0 w-full">
                                     <div className="flex items-center gap-2 flex-wrap">
                                         <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded border ${ann.tag_color}`}>
                                             {ann.tag}
@@ -155,14 +155,14 @@ export default function AnnouncementsPage() {
                                             {ann.date}
                                         </span>
                                     </div>
-                                    <h3 className="font-black text-slate-900 text-sm sm:text-base">{ann.title}</h3>
-                                    <p className="text-slate-600 text-xs leading-relaxed max-w-4xl">{ann.summary}</p>
+                                    <h3 className="font-black text-slate-900 text-sm sm:text-base break-words leading-tight">{ann.title}</h3>
+                                    <p className="text-slate-600 text-xs leading-relaxed break-words whitespace-pre-wrap w-full">{ann.summary}</p>
                                 </div>
 
                                 {isAdmin && (
                                     <button 
                                         onClick={() => handleDelete(ann.id)}
-                                        className="text-slate-400 hover:text-red-600 transition-colors p-2 rounded-xl border border-slate-200 bg-slate-50 hover:bg-red-50 shrink-0 shadow-2xs"
+                                        className="text-slate-400 hover:text-red-600 transition-colors p-2 rounded-xl border border-slate-200 bg-slate-50 hover:bg-red-50 shrink-0 shadow-2xs self-end sm:self-start"
                                         title="Delete notice"
                                     >
                                         <Trash2 className="w-4 h-4" />

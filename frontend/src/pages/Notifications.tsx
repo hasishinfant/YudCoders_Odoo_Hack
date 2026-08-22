@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Bell, Search, CheckCircle2, RefreshCw, AlertCircle } from 'lucide-react';
+import { Bell, Search, RefreshCw, AlertCircle } from 'lucide-react';
 import {
     getMyNotifications,
     markNotificationRead,

@@ -2,10 +2,12 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { getTodayAttendance, getMyAttendance, type AttendanceRecord } from '@/services/attendance';
-import { getMyLeaveBalances, getMyLeaveRequests, type LeaveBalance, type LeaveRequest } from '@/services/leave';
+import { getTodayAttendance, getMyAttendance, getAdminAttendance, type AttendanceRecord } from '@/services/attendance';
+import { getMyLeaveBalances, getMyLeaveRequests, getAdminLeaveRequests, type LeaveBalance, type LeaveRequest } from '@/services/leave';
 import { getMySalary, type EmployeeSalary } from '@/services/payroll';
-import { getEmployeeReport } from '@/services/reports';
+import { getEmployeeReport, getPayrollReport } from '@/services/reports';
+import { getEmployees } from '@/services/employees';
+import { getDepartments } from '@/services/departments';
 import TodayAttendanceCard from '@/components/attendance/TodayAttendanceCard';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -33,7 +35,10 @@ import {
   Gift,
   Trash2,
   X,
-  AlertCircle
+  AlertCircle,
+  Clock,
+  FileText,
+  Search
 } from 'lucide-react';
 
 export default function Dashboard() {
@@ -58,11 +63,24 @@ export default function Dashboard() {
   const [newAnnTagColor, setNewAnnTagColor] = useState('bg-blue-50 text-[#0052FF] border-blue-100');
   const [annError, setAnnError] = useState('');
 
+  // Workforce Status Directory table states
+  const [employeeList, setEmployeeList] = useState<any[]>([]);
+  const [searchQueryTable, setSearchQueryTable] = useState('');
+  const [deptFilterTable, setDeptFilterTable] = useState('');
+  const [statusFilterTable, setStatusFilterTable] = useState('');
+  const [designationFilterTable, setDesignationFilterTable] = useState('');
+  const [departmentsList, setDepartmentsList] = useState<any[]>([]);
+
   const [isAddHolOpen, setIsAddHolOpen] = useState(false);
   const [newHolName, setNewHolName] = useState('');
   const [newHolDate, setNewHolDate] = useState('');
   const [newHolType, setNewHolType] = useState('Gazetted');
   const [holError, setHolError] = useState('');
+
+  // Admin enriched data states
+  const [todayAttendanceRecords, setTodayAttendanceRecords] = useState<any[]>([]);
+  const [payrollReport, setPayrollReport] = useState<any>(null);
+  const [adminAllLeaves, setAdminAllLeaves] = useState<any[]>([]);
 
   const fetchDashboardData = async () => {
     try {
@@ -86,7 +104,13 @@ export default function Dashboard() {
       ];
 
       if (isAdmin) {
-        promises.push(getEmployeeReport().catch(() => ({ data: null })));
+        const today = new Date().toISOString().split('T')[0];
+        promises.push(getEmployeeReport().catch(() => ({ data: null })));                       // [7]
+        promises.push(getEmployees({ limit: 100 }).catch(() => ({ data: [] })));               // [8]
+        promises.push(getDepartments().catch(() => ({ data: [] })));                           // [9]
+        promises.push(getAdminAttendance({ date: today, limit: 100 }).catch(() => ({ data: [] }))); // [10]
+        promises.push(getAdminLeaveRequests({ limit: 50 }).catch(() => ({ data: [] })));       // [11]
+        promises.push(getPayrollReport().catch(() => ({ data: null })));                       // [12]
       }
 
       const results = await Promise.all(promises);
@@ -99,6 +123,11 @@ export default function Dashboard() {
       setHolidays(results[6]?.data || []);
       if (isAdmin) {
         setAdminReport(results[7]?.data || null);
+        setEmployeeList(results[8]?.data?.data || results[8]?.data || []);
+        setDepartmentsList(results[9]?.data?.data || results[9]?.data || []);
+        setTodayAttendanceRecords(results[10]?.data?.data || results[10]?.data || []);
+        setAdminAllLeaves(results[11]?.data?.data || results[11]?.data || []);
+        setPayrollReport(results[12]?.data || null);
       }
     } catch (err) {
       console.error('Failed to fetch dashboard metrics', err);
@@ -217,6 +246,494 @@ export default function Dashboard() {
     const pct = Math.min(100, Math.round((hours / MAX_HOURS) * 100));
     return { day: label, hours: Number(hours).toFixed(1), height: `${Math.max(pct, record ? 5 : 0)}%`, hasData: !!record };
   });
+
+  if (isAdmin) {
+    const uniqueDesignations = Array.from(new Set(employeeList.map(e => e.job_title).filter(Boolean)));
+    const today = new Date().toISOString().split('T')[0];
+
+    // Build today's attendance map: employee_id -> attendance record
+    const todayAttMap: Record<number, any> = {};
+    todayAttendanceRecords.forEach(r => { todayAttMap[r.employee_id] = r; });
+
+    // Compute live metrics from real data
+    const totalEmployees = adminReport?.total_employees ?? employeeList.length;
+    const activeEmployees = adminReport?.active_employees ?? employeeList.filter(e => e.employment_status === 'ACTIVE').length;
+    const onLeaveCount = adminAllLeaves.filter(r => r.status === 'APPROVED' && new Date(r.start_date) <= new Date(today) && new Date(r.end_date) >= new Date(today)).length;
+    const pendingApprovalsCount = adminAllLeaves.filter(r => r.status === 'PENDING').length;
+    const presentTodayCount = todayAttendanceRecords.filter(r => r.status === 'PRESENT').length;
+    const absentTodayCount = totalEmployees - presentTodayCount - onLeaveCount;
+    const avgAttPct = totalEmployees > 0 ? Math.round((presentTodayCount / totalEmployees) * 100) : 0;
+    const totalNetPayroll = payrollReport?.total_net_salary ?? 0;
+    const recentHires = adminReport?.recent_hires ?? [];
+
+    // Filter table
+    const tableFiltered = employeeList.filter(emp => {
+      const name = `${emp.first_name || ''} ${emp.last_name || ''}`.toLowerCase();
+      const code = (emp.employee_code || '').toLowerCase();
+      const dept = (emp.department_name || '').toLowerCase();
+      const search = searchQueryTable.toLowerCase();
+      const matchesSearch = !search || name.includes(search) || code.includes(search) || dept.includes(search);
+      const matchesDept = !deptFilterTable || emp.department_name === deptFilterTable;
+      const attRecord = todayAttMap[emp.id];
+      const empStatus = attRecord?.status || (onLeaveCount > 0 ? 'ABSENT' : 'ABSENT');
+      const matchesStatus = !statusFilterTable || empStatus === statusFilterTable;
+      const matchesDesignation = !designationFilterTable || emp.job_title === designationFilterTable;
+      return matchesSearch && matchesDept && matchesStatus && matchesDesignation;
+    });
+
+    // Recent activity feed: combine recent hires + recent leave requests
+    const recentActivity = [
+      ...recentHires.slice(0, 3).map((h: any) => ({
+        type: 'hire',
+        text: `${h.name} joined as ${h.job_title || 'Employee'}`,
+        dept: h.department,
+        time: h.joining_date,
+        color: 'text-emerald-600',
+        bg: 'bg-emerald-50',
+        border: 'border-emerald-100'
+      })),
+      ...adminAllLeaves.slice(0, 4).map((r: any) => ({
+        type: 'leave',
+        text: `${r.employee_name || 'Employee'} requested ${r.leave_type_name || 'leave'}`,
+        dept: r.department_name,
+        time: r.created_at ? new Date(r.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : '',
+        color: r.status === 'PENDING' ? 'text-orange-600' : r.status === 'APPROVED' ? 'text-emerald-600' : 'text-red-600',
+        bg: r.status === 'PENDING' ? 'bg-orange-50' : r.status === 'APPROVED' ? 'bg-emerald-50' : 'bg-red-50',
+        border: r.status === 'PENDING' ? 'border-orange-100' : r.status === 'APPROVED' ? 'border-emerald-100' : 'border-red-100',
+        status: r.status
+      }))
+    ].slice(0, 6);
+
+    return (
+      <div className="space-y-5 max-w-7xl mx-auto pb-8">
+        {/* Welcome back Banner */}
+        <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm flex justify-between items-center">
+          <div className="space-y-0.5">
+            <h1 className="text-2xl font-black text-slate-900 flex items-center gap-2">
+              Welcome back, <span className="text-[#0052FF]">{user?.email?.split('@')[0]}</span> 👋
+            </h1>
+            <p className="text-xs text-slate-500">Here's what's happening in your organisation today — {new Date().toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}.</p>
+          </div>
+          <div className="flex gap-2">
+            <Button onClick={() => setIsAddAnnOpen(true)} className="bg-[#0052FF] hover:bg-blue-700 text-white font-bold text-xs h-9 px-4 rounded-xl shadow-sm flex items-center gap-1.5">
+              <Plus className="w-3.5 h-3.5" /><span>Post Announcement</span>
+            </Button>
+            <Link to="/employees" className="bg-slate-900 hover:bg-slate-700 text-white font-bold text-xs h-9 px-4 rounded-xl flex items-center gap-1.5 transition-colors">
+              <Users className="w-3.5 h-3.5" /><span>Add Employee</span>
+            </Link>
+          </div>
+        </div>
+
+        {/* 6-Widget Metric Row */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+          {/* 1. Total Employees */}
+          <Link to="/employees" className="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-sm space-y-2 hover:border-[#0052FF]/40 transition-all block group">
+            <div className="flex justify-between items-start">
+              <div>
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Total Employees</span>
+                <span className="text-2xl font-black font-mono text-slate-900 mt-1 block">{totalEmployees}</span>
+              </div>
+              <div className="p-2 bg-blue-50 text-[#0052FF] rounded-xl border border-blue-100 shrink-0">
+                <Users className="w-4 h-4" />
+              </div>
+            </div>
+            <div className="text-[9px] font-bold text-emerald-600">{activeEmployees} active</div>
+            <svg className="w-full h-7" viewBox="0 0 100 30" preserveAspectRatio="none">
+              <path d="M 0 25 Q 15 10, 30 20 T 60 5 T 100 12" fill="none" stroke="#0052FF" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+          </Link>
+
+          {/* 2. Present Today */}
+          <div className="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-sm space-y-2">
+            <div className="flex justify-between items-start">
+              <div>
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Present Today</span>
+                <span className="text-2xl font-black font-mono text-slate-900 mt-1 block">{presentTodayCount}</span>
+              </div>
+              <div className="p-2 bg-emerald-50 text-emerald-600 rounded-xl border border-emerald-100 shrink-0">
+                <Clock className="w-4 h-4" />
+              </div>
+            </div>
+            <div className="text-[9px] font-bold text-emerald-600">{avgAttPct}% attendance rate</div>
+            <svg className="w-full h-7" viewBox="0 0 100 30" preserveAspectRatio="none">
+              <path d="M 0 22 Q 20 8, 40 18 T 80 5 T 100 15" fill="none" stroke="#10B981" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+          </div>
+
+          {/* 3. On Leave */}
+          <Link to="/time-off" className="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-sm space-y-2 block hover:border-amber-300 transition-all">
+            <div className="flex justify-between items-start">
+              <div>
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">On Leave</span>
+                <span className="text-2xl font-black font-mono text-slate-900 mt-1 block">{onLeaveCount}</span>
+              </div>
+              <div className="p-2 bg-amber-50 text-amber-600 rounded-xl border border-amber-100 shrink-0">
+                <Calendar className="w-4 h-4" />
+              </div>
+            </div>
+            <div className="text-[9px] font-bold text-slate-500">{totalEmployees > 0 ? ((onLeaveCount / totalEmployees) * 100).toFixed(1) : 0}% of total</div>
+            <svg className="w-full h-7" viewBox="0 0 100 30" preserveAspectRatio="none">
+              <path d="M 0 15 Q 30 25, 60 10 T 100 18" fill="none" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+          </Link>
+
+          {/* 4. Pending Approvals */}
+          <Link to="/time-off" className="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-sm space-y-2 hover:border-orange-300 transition-all block">
+            <div className="flex justify-between items-start">
+              <div>
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Pending Approvals</span>
+                <span className="text-2xl font-black font-mono text-orange-600 mt-1 block">{String(pendingApprovalsCount).padStart(2, '0')}</span>
+              </div>
+              <div className="p-2 bg-orange-50 text-orange-600 rounded-xl border border-orange-100 shrink-0">
+                <FileText className="w-4 h-4" />
+              </div>
+            </div>
+            <div className="text-[9px] font-black text-[#0052FF]">View all →</div>
+            <svg className="w-full h-7" viewBox="0 0 100 30" preserveAspectRatio="none">
+              <path d="M 0 12 Q 25 22, 50 12 T 100 18" fill="none" stroke="#EF4444" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+          </Link>
+
+          {/* 5. Absent Today */}
+          <div className="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-sm space-y-2">
+            <div className="flex justify-between items-start">
+              <div>
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Absent Today</span>
+                <span className="text-2xl font-black font-mono text-red-600 mt-1 block">{absentTodayCount > 0 ? absentTodayCount : '00'}</span>
+              </div>
+              <div className="p-2 bg-red-50 text-red-600 rounded-xl border border-red-100 shrink-0">
+                <AlertCircle className="w-4 h-4" />
+              </div>
+            </div>
+            <div className="text-[9px] font-bold text-slate-500">No check-in recorded</div>
+            <svg className="w-full h-7" viewBox="0 0 100 30" preserveAspectRatio="none">
+              <path d="M 0 20 Q 30 5, 60 15 T 100 10" fill="none" stroke="#EF4444" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+          </div>
+
+          {/* 6. Net Payroll */}
+          <Link to="/payroll" className="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-sm space-y-2 hover:border-purple-300 transition-all block">
+            <div className="flex justify-between items-start">
+              <div>
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Net Payroll</span>
+                <span className="text-2xl font-black font-mono text-slate-900 mt-1 block">
+                  {totalNetPayroll > 0 ? `₹${(totalNetPayroll / 1000).toFixed(0)}K` : '—'}
+                </span>
+              </div>
+              <div className="p-2 bg-purple-50 text-purple-600 rounded-xl border border-purple-100 shrink-0">
+                <BarChart3 className="w-4 h-4" />
+              </div>
+            </div>
+            <div className="text-[9px] font-bold text-purple-600">This month's payroll</div>
+            <svg className="w-full h-7" viewBox="0 0 100 30" preserveAspectRatio="none">
+              <path d="M 0 12 Q 25 5, 50 15 T 100 8" fill="none" stroke="#8B5CF6" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+          </Link>
+        </div>
+
+        {/* Middle Row: Activity Feed + Attendance Summary + Announcements */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          {/* Recent Activity Feed */}
+          <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xs font-black text-slate-700 uppercase tracking-wider">Recent Activity</h3>
+              <span className="text-[10px] text-slate-400 font-bold">Live Feed</span>
+            </div>
+            <div className="space-y-3">
+              {recentActivity.length === 0 ? (
+                <p className="text-xs text-slate-400 italic text-center py-6">No recent activity.</p>
+              ) : recentActivity.map((item, i) => (
+                <div key={i} className="flex items-start gap-3">
+                  <span className={`w-7 h-7 rounded-full ${item.bg} ${item.border} border flex items-center justify-center shrink-0`}>
+                    {item.type === 'hire' ? <Users className={`w-3.5 h-3.5 ${item.color}`} /> : <FileText className={`w-3.5 h-3.5 ${item.color}`} />}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-bold text-slate-800 leading-tight truncate">{item.text}</p>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      {item.dept && <span className="text-[10px] text-slate-400 truncate">{item.dept}</span>}
+                      {'status' in item && (
+                        <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full ${item.bg} ${item.color} border ${item.border}`}>{item.status}</span>
+                      )}
+                    </div>
+                  </div>
+                  <span className="text-[10px] text-slate-400 shrink-0">{item.time}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Today's Attendance Summary */}
+          <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xs font-black text-slate-700 uppercase tracking-wider">Attendance Summary</h3>
+              <Link to="/attendance" className="text-[10px] text-[#0052FF] font-black hover:underline">View All →</Link>
+            </div>
+            <div className="space-y-3">
+              {/* Attendance Progress Bars */}
+              <div>
+                <div className="flex justify-between text-[10px] font-bold mb-1">
+                  <span className="text-emerald-700">Present</span>
+                  <span className="text-emerald-700">{presentTodayCount} / {totalEmployees}</span>
+                </div>
+                <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                  <div className="h-full bg-emerald-500 rounded-full transition-all" style={{ width: `${totalEmployees > 0 ? (presentTodayCount / totalEmployees) * 100 : 0}%` }} />
+                </div>
+              </div>
+              <div>
+                <div className="flex justify-between text-[10px] font-bold mb-1">
+                  <span className="text-amber-600">On Leave</span>
+                  <span className="text-amber-600">{onLeaveCount} / {totalEmployees}</span>
+                </div>
+                <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                  <div className="h-full bg-amber-400 rounded-full transition-all" style={{ width: `${totalEmployees > 0 ? (onLeaveCount / totalEmployees) * 100 : 0}%` }} />
+                </div>
+              </div>
+              <div>
+                <div className="flex justify-between text-[10px] font-bold mb-1">
+                  <span className="text-red-600">Absent</span>
+                  <span className="text-red-600">{Math.max(0, absentTodayCount)} / {totalEmployees}</span>
+                </div>
+                <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                  <div className="h-full bg-red-400 rounded-full transition-all" style={{ width: `${totalEmployees > 0 ? (Math.max(0, absentTodayCount) / totalEmployees) * 100 : 0}%` }} />
+                </div>
+              </div>
+
+              <div className="border-t border-slate-100 pt-3 mt-3">
+                <p className="text-[10px] font-bold text-slate-500 mb-2 uppercase tracking-wider">Dept Breakdown</p>
+                <div className="space-y-1.5">
+                  {(adminReport?.department_breakdown || []).slice(0, 4).map((d: any, i: number) => (
+                    <div key={i} className="flex justify-between text-[10px]">
+                      <span className="text-slate-600 font-bold truncate max-w-[120px]">{d.department}</span>
+                      <span className="font-black text-slate-900 font-mono">{d.count}</span>
+                    </div>
+                  ))}
+                  {(adminReport?.department_breakdown || []).length === 0 && (
+                    <p className="text-[10px] text-slate-400 italic">No department data yet.</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Announcements Panel */}
+          <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm flex flex-col">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xs font-black text-slate-700 uppercase tracking-wider">Announcements</h3>
+              <button onClick={() => setIsAddAnnOpen(true)} className="text-[10px] text-[#0052FF] font-black hover:underline flex items-center gap-1">
+                <Plus className="w-3 h-3" /> Post
+              </button>
+            </div>
+            <div className="space-y-2.5 flex-1">
+              {announcements.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-8 text-center">
+                  <Megaphone className="w-8 h-8 text-slate-200 mb-2" />
+                  <p className="text-xs text-slate-400 italic">No announcements yet.</p>
+                  <button onClick={() => setIsAddAnnOpen(true)} className="mt-2 text-[10px] font-black text-[#0052FF] hover:underline">Post first announcement →</button>
+                </div>
+              ) : announcements.slice(0, 4).map(ann => (
+                <div key={ann.id} className="border border-slate-100 rounded-xl p-3 hover:bg-slate-50 transition-colors">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1 min-w-0">
+                      <span className={`inline-block text-[9px] font-black px-2 py-0.5 rounded-full border mb-1 ${ann.tag_color || 'bg-blue-50 text-[#0052FF] border-blue-100'}`}>{ann.tag || 'Notice'}</span>
+                      <p className="text-xs font-bold text-slate-800 leading-tight">{ann.title}</p>
+                      <p className="text-[10px] text-slate-500 mt-0.5 line-clamp-2">{ann.summary}</p>
+                    </div>
+                    {isAdmin && (
+                      <button onClick={() => handleDeleteAnnouncement(ann.id)} className="text-slate-300 hover:text-red-500 transition-colors shrink-0">
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+            {announcements.length > 4 && (
+              <Link to="/announcements" className="text-center text-[10px] font-black text-[#0052FF] hover:underline mt-3 block pt-3 border-t border-slate-100">
+                View all {announcements.length} announcements →
+              </Link>
+            )}
+          </div>
+        </div>
+
+        {/* Leave Requests Quick Panel + Payroll Summary */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {/* Recent Leave Requests */}
+          <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xs font-black text-slate-700 uppercase tracking-wider">
+                Leave Requests
+                {pendingApprovalsCount > 0 && (
+                  <span className="ml-2 px-2 py-0.5 bg-orange-50 text-orange-600 border border-orange-100 rounded-full text-[9px]">{pendingApprovalsCount} pending</span>
+                )}
+              </h3>
+              <Link to="/time-off" className="text-[10px] text-[#0052FF] font-black hover:underline">Manage All →</Link>
+            </div>
+            <div className="space-y-2">
+              {adminAllLeaves.length === 0 ? (
+                <p className="text-xs text-slate-400 italic text-center py-6">No leave requests found.</p>
+              ) : adminAllLeaves.slice(0, 5).map((r: any) => (
+                <div key={r.id} className="flex items-center justify-between py-2 border-b border-slate-50 last:border-0">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-7 h-7 rounded-full bg-blue-50 text-[#0052FF] border border-blue-100 flex items-center justify-center text-xs font-black shrink-0">
+                      {(r.employee_name || 'E')[0]}
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-slate-800">{r.employee_name || 'Employee'}</p>
+                      <p className="text-[10px] text-slate-400">{r.leave_type_name} · {r.start_date} – {r.end_date}</p>
+                    </div>
+                  </div>
+                  <span className={`text-[9px] font-black px-2.5 py-1 rounded-full border ${
+                    r.status === 'PENDING' ? 'bg-orange-50 text-orange-700 border-orange-100' :
+                    r.status === 'APPROVED' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' :
+                    'bg-red-50 text-red-700 border-red-100'
+                  }`}>{r.status}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Payroll + Dept Summary */}
+          <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xs font-black text-slate-700 uppercase tracking-wider">Payroll Overview</h3>
+              <Link to="/payroll" className="text-[10px] text-[#0052FF] font-black hover:underline">View Payroll →</Link>
+            </div>
+            {payrollReport ? (
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  {[
+                    { label: 'Total Records', value: payrollReport.total_payrolls, color: 'text-slate-900' },
+                    { label: 'Gross Salary', value: `₹${(payrollReport.total_gross_salary / 1000).toFixed(1)}K`, color: 'text-[#0052FF]' },
+                    { label: 'Deductions', value: `₹${(payrollReport.total_deductions / 1000).toFixed(1)}K`, color: 'text-red-600' },
+                    { label: 'Net Salary', value: `₹${(payrollReport.total_net_salary / 1000).toFixed(1)}K`, color: 'text-emerald-700' },
+                  ].map((item, i) => (
+                    <div key={i} className="bg-slate-50 rounded-xl p-3 border border-slate-100">
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{item.label}</p>
+                      <p className={`text-lg font-black font-mono mt-0.5 ${item.color}`}>{item.value}</p>
+                    </div>
+                  ))}
+                </div>
+                <div className="flex gap-2 pt-2">
+                  {[
+                    { label: 'Paid', count: payrollReport.paid_count, color: 'bg-emerald-50 text-emerald-700 border-emerald-100' },
+                    { label: 'Processed', count: payrollReport.processed_count, color: 'bg-blue-50 text-[#0052FF] border-blue-100' },
+                    { label: 'Draft', count: payrollReport.draft_count, color: 'bg-slate-100 text-slate-500 border-slate-200' },
+                  ].map((s, i) => (
+                    <div key={i} className={`flex-1 text-center py-2 rounded-xl border text-[10px] font-black ${s.color}`}>
+                      <div className="text-sm font-black font-mono">{s.count}</div>
+                      <div>{s.label}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-8 text-center">
+                <DollarSign className="w-8 h-8 text-slate-200 mb-2" />
+                <p className="text-xs text-slate-400 italic">No payroll data found.</p>
+                <Link to="/payroll" className="mt-2 text-[10px] font-black text-[#0052FF] hover:underline">Set up payroll →</Link>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* WORKFORCE STATUS DIRECTORY */}
+        <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm">
+          <div className="flex justify-between items-center border-b border-slate-100 pb-4 mb-4 flex-wrap gap-2">
+            <div className="flex items-center gap-2">
+              <h2 className="text-sm font-black text-slate-900 uppercase tracking-wider">Workforce Status Directory</h2>
+              <span className="px-2.5 py-0.5 bg-orange-50 text-orange-600 border border-orange-100 rounded-full text-[10px] font-black font-mono">
+                {tableFiltered.length} results
+              </span>
+            </div>
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Real-Time Workforce Command Center</span>
+          </div>
+
+          {/* Filters Row */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4">
+            <div className="relative">
+              <Search className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
+              <Input
+                placeholder="Search ID, name, dept..."
+                className="h-10 pl-9 text-xs rounded-xl border-slate-200"
+                value={searchQueryTable}
+                onChange={(e) => setSearchQueryTable(e.target.value)}
+              />
+            </div>
+            <select className="h-10 px-3 text-xs font-bold border rounded-xl bg-slate-50 border-slate-200 text-slate-700 focus:outline-none" value={deptFilterTable} onChange={(e) => setDeptFilterTable(e.target.value)}>
+              <option value="">All Departments</option>
+              {departmentsList.map((d: any) => <option key={d.id} value={d.name}>{d.name}</option>)}
+            </select>
+            <select className="h-10 px-3 text-xs font-bold border rounded-xl bg-slate-50 border-slate-200 text-slate-700 focus:outline-none" value={statusFilterTable} onChange={(e) => setStatusFilterTable(e.target.value)}>
+              <option value="">All Attendance Status</option>
+              <option value="PRESENT">PRESENT</option>
+              <option value="ABSENT">ABSENT</option>
+              <option value="LEAVE">ON LEAVE</option>
+            </select>
+            <select className="h-10 px-3 text-xs font-bold border rounded-xl bg-slate-50 border-slate-200 text-slate-700 focus:outline-none" value={designationFilterTable} onChange={(e) => setDesignationFilterTable(e.target.value)}>
+              <option value="">All Designations</option>
+              {uniqueDesignations.map((title: any, idx: number) => <option key={idx} value={title}>{title}</option>)}
+            </select>
+          </div>
+
+          {/* Workforce Table */}
+          <div className="border border-slate-100 rounded-xl overflow-auto max-h-80">
+            <table className="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr className="bg-slate-50/80 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider text-[10px] sticky top-0 z-10">
+                  <th className="p-3 pl-4">Employee ID</th>
+                  <th className="p-3">Employee Name</th>
+                  <th className="p-3">Gender</th>
+                  <th className="p-3">Department</th>
+                  <th className="p-3">Today's Attendance</th>
+                  <th className="p-3">Designation</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-50">
+                {tableFiltered.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="text-center py-10 text-slate-400 italic text-xs">
+                      {employeeList.length === 0 ? 'Loading employee records...' : 'No records match the current filters.'}
+                    </td>
+                  </tr>
+                ) : tableFiltered.map(emp => {
+                  const attRecord = todayAttMap[emp.id];
+                  const attStatus = attRecord?.status || 'ABSENT';
+                  return (
+                    <tr key={emp.id} className="hover:bg-slate-50/60 transition-colors">
+                      <td className="p-3 pl-4 font-mono font-black text-slate-500 text-[11px]">{emp.employee_code}</td>
+                      <td className="p-3">
+                        <Link to={`/employees/${emp.id}`} className="flex items-center gap-2.5 hover:underline">
+                          <div className="w-8 h-8 rounded-full bg-blue-50 text-[#0052FF] font-black border border-blue-100 flex items-center justify-center text-xs shrink-0 overflow-hidden">
+                            {emp.avatar_url ? <img src={emp.avatar_url} alt="" className="w-full h-full object-cover" /> : <span>{emp.first_name?.charAt(0)}{emp.last_name?.charAt(0)}</span>}
+                          </div>
+                          <div>
+                            <span className="font-bold text-slate-900 block">{emp.first_name} {emp.last_name}</span>
+                            <span className="text-[10px] text-slate-400">{emp.email}</span>
+                          </div>
+                        </Link>
+                      </td>
+                      <td className="p-3 text-slate-500 font-bold capitalize">{emp.gender || '—'}</td>
+                      <td className="p-3 font-bold text-slate-700">{emp.department_name || '—'}</td>
+                      <td className="p-3">
+                        <span className={`inline-flex px-2.5 py-0.5 rounded-full text-[9px] font-black tracking-wider ${
+                          attStatus === 'PRESENT' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' :
+                          attStatus === 'LEAVE' ? 'bg-amber-50 text-amber-700 border border-amber-100' :
+                          'bg-slate-100 text-slate-500 border border-slate-200'
+                        }`}>{attStatus}</span>
+                      </td>
+                      <td className="p-3 text-slate-600 font-bold">{emp.job_title || '—'}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Modals carried forward */}
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 max-w-7xl mx-auto animate-in fade-in duration-300">

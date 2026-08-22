@@ -214,22 +214,24 @@ export default function CalendarPage() {
                                 Loading calendar...
                             </div>
                         ) : (
-                            <div className="grid grid-cols-7 gap-px bg-slate-100">
+                            <div className="grid grid-cols-7 gap-px bg-slate-200">
                                 {cells.map((day, idx) => {
-                                    if (day === null) return <div key={`e-${idx}`} className="bg-white h-24 p-2 opacity-30" />;
+                                    if (day === null) return <div key={`e-${idx}`} className="bg-slate-50/50 min-h-[100px] p-2" />;
                                     const dateEvents = getEventsForDate(day);
                                     const todayHighlight = isToday(day);
                                     return (
-                                        <div key={`d-${day}`} className={`bg-white h-28 p-2 flex flex-col justify-between hover:bg-slate-50/60 transition-colors ${todayHighlight ? 'ring-2 ring-inset ring-[#0052FF]' : ''}`}>
-                                            <span className={`text-xs font-black font-mono ${todayHighlight ? 'text-[#0052FF]' : 'text-slate-800'}`}>
-                                                {day}
-                                                {todayHighlight && <span className="ml-1 text-[8px] bg-[#0052FF] text-white rounded px-1">TODAY</span>}
-                                            </span>
-                                            <div className="space-y-0.5 overflow-y-auto max-h-16 mt-1">
+                                        <div key={`d-${day}`} className={`bg-white min-h-[100px] p-2 flex flex-col hover:bg-slate-50/80 transition-colors group ${todayHighlight ? 'ring-2 ring-inset ring-[#0052FF]' : ''}`}>
+                                            <div className="flex justify-between items-start mb-1">
+                                                <span className={`text-xs font-bold ${todayHighlight ? 'text-[#0052FF]' : 'text-slate-700 group-hover:text-slate-900'}`}>
+                                                    {day}
+                                                </span>
+                                                {todayHighlight && <span className="text-[8px] bg-[#0052FF] text-white rounded-sm px-1 font-bold tracking-wider">TODAY</span>}
+                                            </div>
+                                            <div className="space-y-1 overflow-y-auto max-h-[80px] scrollbar-thin scrollbar-thumb-slate-200">
                                                 {dateEvents.map((e, eIdx) => (
                                                     <div
                                                         key={eIdx}
-                                                        className={`text-[8px] font-bold leading-tight px-1.5 py-0.5 rounded-md truncate ${e.bg} ${e.color}`}
+                                                        className={`text-[9px] font-bold leading-tight px-1.5 py-1 rounded border shadow-2xs truncate ${e.bg} ${e.color} ${e.bg.replace('bg-', 'border-').replace('100', '200')}`}
                                                         title={e.title}
                                                     >
                                                         {e.title}

@@ -26,7 +26,11 @@ export default function Login() {
             const res = await login({ identifier: email, password });
             if (res.success) {
                 loginContext(res.data.access_token, res.data.user);
-                navigate('/');
+                if (res.data.user.role === 'ADMIN') {
+                    navigate('/employees');
+                } else {
+                    navigate('/');
+                }
             }
         } catch (err: any) {
             setError(err.response?.data?.detail || 'Invalid email, Login ID, or password');

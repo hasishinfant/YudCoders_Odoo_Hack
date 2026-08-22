@@ -6,6 +6,7 @@ import {
   type Employee,
   type EmployeeCreatePayload
 } from '@/services/employees';
+import { getAdminAttendance } from '@/services/attendance';
 import { getDepartments, type Department } from '@/services/departments';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,7 +23,8 @@ import {
   ChevronRight,
   X,
   AlertCircle,
-  CheckCircle2
+  CheckCircle2,
+  Plane
 } from 'lucide-react';
 
 export default function EmployeesPage() {
@@ -60,15 +62,19 @@ export default function EmployeesPage() {
     avatar_url: ''
   });
 
+  const [attendanceMap, setAttendanceMap] = useState<Record<number, string>>({});
+
   const loadData = async () => {
     setLoading(true);
     try {
-      const [empRes, deptRes] = await Promise.all([
+      const today = new Date().toISOString().split('T')[0];
+      const [empRes, deptRes, attRes] = await Promise.all([
         getEmployees({
           q: search || undefined,
           department_id: deptFilter
         }),
-        getDepartments()
+        getDepartments(),
+        getAdminAttendance({ date: today })
       ]);
       let list: Employee[] = empRes.data || [];
       if (statusFilter) {
@@ -76,6 +82,14 @@ export default function EmployeesPage() {
       }
       setEmployees(list);
       setDepartments(deptRes.data || []);
+      
+      const map: Record<number, string> = {};
+      const attRecords = attRes.data?.data || attRes.data || [];
+      attRecords.forEach((r: any) => {
+          map[r.employee_id] = r.status;
+      });
+      setAttendanceMap(map);
+      
     } catch (err) {
       console.error('Failed to load employee directory', err);
     } finally {
@@ -214,57 +228,59 @@ export default function EmployeesPage() {
       ) : viewMode === 'grid' ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {employees.map(emp => (
-            <Card key={emp.id} className="bg-white border border-slate-200/80 rounded-2xl shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden flex flex-col justify-between group h-full">
-              <CardContent className="p-6 space-y-4 flex-1">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-12 h-12 rounded-2xl bg-blue-50 text-[#0052FF] border border-blue-100 font-extrabold flex items-center justify-center text-base shadow-sm overflow-hidden shrink-0">
-                      {emp.avatar_url ? (
-                        <img src={emp.avatar_url} alt="Profile" className="w-full h-full object-cover" />
-                      ) : (
-                        <span>{emp.first_name?.charAt(0)}{emp.last_name?.charAt(0)}</span>
-                      )}
+            <Link key={emp.id} to={`/employees/${emp.id}`} className="block h-full group">
+              <Card className="bg-white border border-slate-200/80 rounded-2xl shadow-sm hover:shadow-md hover:border-[#0052FF]/30 transition-all duration-200 overflow-hidden flex flex-col justify-between h-full relative cursor-pointer">
+                {/* Employee Card Content */}
+                <CardContent className="p-6 space-y-4 flex-1">
+                  <div className="flex items-start justify-between relative">
+                    <div className="flex items-center space-x-3 flex-1 min-w-0 w-full pr-8">
+                      <div className="w-12 h-12 rounded-2xl bg-blue-50 text-[#0052FF] border border-blue-100 font-extrabold flex items-center justify-center text-base shadow-sm overflow-hidden shrink-0">
+                        {emp.avatar_url ? (
+                          <img src={emp.avatar_url} alt="Profile" className="w-full h-full object-cover" />
+                        ) : (
+                          <span>{emp.first_name?.charAt(0)}{emp.last_name?.charAt(0)}</span>
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1 w-full">
+                        <h3 className="font-bold text-slate-900 text-sm group-hover:text-[#0052FF] transition-colors truncate block w-full" title={`${emp.first_name} ${emp.last_name}`}>
+                          {emp.first_name} {emp.last_name}
+                        </h3>
+                        <span className="font-mono text-[11px] text-slate-500 font-medium block truncate w-full">{emp.employee_code}</span>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="font-bold text-slate-900 text-sm group-hover:text-[#0052FF] transition-colors">
-                        {emp.first_name} {emp.last_name}
-                      </h3>
-                      <span className="font-mono text-[11px] text-slate-500 font-medium block">{emp.employee_code}</span>
+                    {/* Status Dot (Top Right) */}
+                    <div className="absolute top-0 right-0" title={`Status: ${attendanceMap[emp.id] || 'ABSENT'}`}>
+                        {attendanceMap[emp.id] === 'PRESENT' ? (
+                            <div className="w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-white shadow-2xs" />
+                        ) : attendanceMap[emp.id] === 'LEAVE' ? (
+                            <div className="bg-[#0052FF] text-white rounded-full p-0.5 border-2 border-white shadow-2xs">
+                                <Plane className="w-2.5 h-2.5" />
+                            </div>
+                        ) : attendanceMap[emp.id] === 'HALF_DAY' ? (
+                            <div className="w-3.5 h-3.5 rounded-full bg-blue-500 border-2 border-white shadow-2xs" />
+                        ) : (
+                            <div className="w-3.5 h-3.5 rounded-full bg-amber-400 border-2 border-white shadow-2xs" />
+                        )}
                     </div>
                   </div>
-                  <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-extrabold uppercase ${
-                    emp.employment_status === 'ACTIVE' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'
-                  }`}>
-                    {emp.employment_status || 'ACTIVE'}
-                  </span>
-                </div>
 
-                <div className="space-y-2 pt-2 border-t border-slate-100 text-xs text-slate-600">
-                  <div className="flex items-center space-x-2">
-                    <Briefcase className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                    <span className="font-semibold text-slate-800">{emp.job_title || 'Employee'}</span>
+                  <div className="space-y-2 pt-2 border-t border-slate-100 text-xs text-slate-600 min-w-0 w-full">
+                    <div className="flex items-center space-x-2 w-full min-w-0">
+                      <Briefcase className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                      <span className="font-semibold text-slate-800 truncate block w-full">{emp.job_title || 'Employee'}</span>
+                    </div>
+                    <div className="flex items-center space-x-2 w-full min-w-0">
+                      <Building2 className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                      <span className="truncate block w-full">{emp.department_name || 'Unassigned Dept'}</span>
+                    </div>
+                    <div className="flex items-center space-x-2 w-full min-w-0">
+                      <Mail className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                      <span className="truncate block w-full">{emp.email}</span>
+                    </div>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <Building2 className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                    <span>{emp.department_name || 'Unassigned Dept'}</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Mail className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                    <span className="truncate">{emp.email}</span>
-                  </div>
-                </div>
-              </CardContent>
-
-              <div className="bg-slate-50 p-3.5 border-t border-slate-100 flex justify-end">
-                <Link
-                  to={`/employees/${emp.id}`}
-                  className="text-slate-900 hover:text-[#0052FF] font-bold text-xs flex items-center space-x-1"
-                >
-                  <span>View Profile</span>
-                  <ChevronRight className="w-4 h-4" />
-                </Link>
-              </div>
-            </Card>
+                </CardContent>
+              </Card>
+            </Link>
           ))}
         </div>
       ) : (
