@@ -83,6 +83,11 @@ export default function MainLayout() {
               <div>
                 <span className="text-xl font-extrabold text-slate-900 tracking-tight block leading-tight">Dayflow</span>
                 <span className="text-[10px] text-slate-400 font-semibold tracking-wider block">HR Management System</span>
+                <span className={`inline-block text-[8px] font-black tracking-wider uppercase px-2 py-0.5 mt-1 rounded-full ${
+                  user?.role === 'ADMIN' ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-[#0052FF]'
+                }`}>
+                  {user?.role === 'ADMIN' ? 'HR / Admin Portal' : 'Employee Portal'}
+                </span>
               </div>
             </Link>
             <button 
@@ -233,9 +238,17 @@ export default function MainLayout() {
                   </div>
                 </div>
 
-                <div className="hidden md:block">
-                  <span className="text-xs font-bold text-slate-900 block leading-tight">Kaaysha Rao</span>
-                  <span className="text-[10px] text-slate-500 font-mono block">EMP00123</span>
+                 <div className="hidden md:block">
+                  <span className="text-xs font-bold text-slate-900 block leading-tight font-black">Kaaysha Rao</span>
+                  <div className="flex items-center space-x-1.5 mt-0.5">
+                    <span className="text-[9px] text-slate-500 font-mono font-bold">EMP00123</span>
+                    <span className="text-[9px] text-slate-300">•</span>
+                    <span className={`text-[8px] font-black tracking-wider uppercase px-1.5 py-0.2 rounded-md ${
+                      user?.role === 'ADMIN' ? 'bg-orange-50 text-orange-600 border border-orange-200' : 'bg-blue-50 text-[#0052FF] border border-blue-200'
+                    }`}>
+                      {user?.role === 'ADMIN' ? 'HR Admin' : 'Employee'}
+                    </span>
+                  </div>
                 </div>
 
                 <ChevronDown className="w-4 h-4 text-slate-400 hidden md:block" />
