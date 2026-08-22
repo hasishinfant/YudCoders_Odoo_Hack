@@ -4,6 +4,8 @@ import MainLayout from './layouts/MainLayout';
 import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
 import ChangePassword from './pages/ChangePassword';
+import Employees from './pages/Employees';
+import EmployeeDetail from './pages/EmployeeDetail';
 import { ProtectedRoute } from './routes/ProtectedRoute';
 
 function App() {
@@ -15,8 +17,16 @@ function App() {
           
           <Route element={<ProtectedRoute />}>
             <Route path="/change-password" element={<ChangePassword />} />
+            
             <Route path="/" element={<MainLayout />}>
               <Route index element={<Dashboard />} />
+              <Route path="profile" element={<EmployeeDetail isSelfProfile />} />
+              
+              {/* Admin Protected Routes */}
+              <Route element={<ProtectedRoute allowedRoles={['ADMIN']} />}>
+                <Route path="employees" element={<Employees />} />
+                <Route path="employees/:id" element={<EmployeeDetail />} />
+              </Route>
             </Route>
           </Route>
         </Routes>
