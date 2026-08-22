@@ -339,14 +339,14 @@ export default function EmployeesPage() {
       {isAddModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 overflow-y-auto">
           <Card className="w-full max-w-2xl bg-white border-slate-200 shadow-2xl overflow-hidden rounded-2xl animate-in fade-in zoom-in duration-200">
-            <div className="bg-slate-900 text-white p-5 flex flex-row items-center justify-between space-y-0">
+            <div className="bg-[#0052FF] text-white p-5 flex flex-row items-center justify-between space-y-0">
               <div className="text-lg font-bold text-white flex items-center space-x-2">
-                <UserPlus className="w-5 h-5 text-[#0052FF]" />
+                <UserPlus className="w-5 h-5 text-blue-100" />
                 <span>Onboard New Employee</span>
               </div>
               <button 
                 onClick={() => setIsAddModalOpen(false)}
-                className="text-slate-400 hover:text-white transition-colors p-1 rounded-md"
+                className="text-blue-100 hover:text-white transition-colors p-1.5 rounded-lg hover:bg-white/10"
               >
                 <X className="w-5 h-5" />
               </button>

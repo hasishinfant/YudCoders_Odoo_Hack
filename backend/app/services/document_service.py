@@ -40,18 +40,14 @@ class DocumentService:
         name: str,
         doc_type: str
     ) -> Document:
+        # Resolve target_employee_id to employee profile if uploader is EMPLOYEE
+        if uploader.role == RoleEnum.EMPLOYEE:
+            user_emp = DocumentService.get_employee_for_user(db, uploader)
+            target_employee_id = user_emp.id
+        
         emp = db.query(Employee).filter(Employee.id == target_employee_id).first()
         if not emp:
             raise HTTPException(status_code=404, detail="Target employee not found.")
-
-        # Authorization: Employee can only upload for self, Admin can upload for anyone
-        if uploader.role == RoleEnum.EMPLOYEE:
-            user_emp = DocumentService.get_employee_for_user(db, uploader)
-            if user_emp.id != target_employee_id:
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail="You can only upload documents to your own profile."
-                )
 
         file_bytes = file.file.read()
         file_size = len(file_bytes)

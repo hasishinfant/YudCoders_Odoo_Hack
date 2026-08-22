@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Megaphone, Search, Plus, Trash2, AlertCircle } from 'lucide-react';
+import { Megaphone, Search, Plus, Trash2, AlertCircle, X } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -187,16 +187,21 @@ export default function AnnouncementsPage() {
             {/* Post Announcement Modal */}
             {isOpen && (
                 <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-                    <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 animate-in zoom-in-95 duration-200">
-                        <div className="flex justify-between items-center border-b border-slate-100 pb-3 mb-4">
-                            <h3 className="font-black text-slate-900 text-base flex items-center gap-1.5">
-                                <Megaphone className="w-5 h-5 text-[#0052FF]" />
+                    <div className="bg-white rounded-2xl max-w-md w-full overflow-hidden shadow-2xl border border-slate-100 animate-in zoom-in-95 duration-200">
+                        <div className="bg-[#0052FF] text-white p-5 flex justify-between items-center mb-4">
+                            <h3 className="font-bold text-white text-base flex items-center gap-2">
+                                <Megaphone className="w-5 h-5 text-blue-100" />
                                 <span>Post Announcement</span>
                             </h3>
-                            <button onClick={() => setIsOpen(false)} className="text-slate-400 hover:text-slate-600 text-lg">×</button>
+                            <button 
+                                onClick={() => setIsOpen(false)} 
+                                className="text-blue-100 hover:text-white transition-colors p-1.5 rounded-lg hover:bg-white/10"
+                            >
+                                <X className="w-4.5 h-4.5" />
+                            </button>
                         </div>
 
-                        <form onSubmit={handleCreate} className="space-y-4 text-xs font-bold">
+                        <form onSubmit={handleCreate} className="space-y-4 text-xs font-bold px-5 pb-5">
                             {submitError && (
                                 <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-xl leading-relaxed">
                                     {submitError}

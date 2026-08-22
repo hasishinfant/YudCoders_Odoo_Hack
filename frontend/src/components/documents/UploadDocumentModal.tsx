@@ -1,7 +1,7 @@
 import { useState, type FormEvent, type ChangeEvent } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { uploadDocument } from '@/services/documents';
 import { AlertCircle, X, Upload } from 'lucide-react';
 
@@ -53,18 +53,18 @@ export default function UploadDocumentModal({ employeeId, employeeName, isOpen, 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
             <Card className="w-full max-w-md bg-white border-slate-200 shadow-2xl overflow-hidden rounded-xl animate-in fade-in zoom-in duration-200">
-                <CardHeader className="bg-slate-900 text-white p-5 flex flex-row items-center justify-between space-y-0">
-                    <CardTitle className="text-lg font-bold text-white flex items-center space-x-2">
-                        <Upload className="w-5 h-5 text-emerald-400" />
+                <div className="bg-[#0052FF] text-white p-5 flex flex-row items-center justify-between space-y-0">
+                    <h3 className="text-base font-bold text-white flex items-center space-x-2">
+                        <Upload className="w-5 h-5 text-blue-100" />
                         <span>Upload Document {employeeName ? `— ${employeeName}` : ''}</span>
-                    </CardTitle>
+                    </h3>
                     <button 
                         onClick={onClose}
-                        className="text-slate-400 hover:text-white transition-colors p-1 rounded-md"
+                        className="text-blue-100 hover:text-white transition-colors p-1.5 rounded-lg hover:bg-white/10"
                     >
-                        <X className="w-5 h-5" />
+                        <X className="w-4.5 h-4.5" />
                     </button>
-                </CardHeader>
+                </div>
 
                 <CardContent className="p-6 space-y-4">
                     {error && (
@@ -123,13 +123,13 @@ export default function UploadDocumentModal({ employeeId, employeeName, isOpen, 
                                 type="button" 
                                 variant="outline" 
                                 onClick={onClose} 
-                                className="text-xs font-semibold"
+                                className="text-xs font-semibold rounded-xl h-10 px-4"
                             >
                                 Cancel
                             </Button>
                             <Button 
                                 type="submit" 
-                                className="bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs px-5"
+                                className="bg-[#0052FF] hover:bg-blue-700 text-white font-bold text-xs px-5 rounded-xl h-10 shadow-md shadow-blue-500/10 transition-colors"
                                 disabled={loading}
                             >
                                 {loading ? 'Uploading...' : 'Upload Document'}

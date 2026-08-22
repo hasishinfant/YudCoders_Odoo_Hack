@@ -52,6 +52,7 @@ export default function MainLayout() {
   const allNavItems: NavItem[] = [
     { path: '/', label: 'Dashboard', icon: LayoutDashboard },
     { path: '/profile', label: 'My Profile', icon: User, employeeOnly: true },
+    { path: '/employees', label: 'Employee Directory', icon: User, adminOnly: true },
     { path: '/attendance', label: 'Attendance', icon: Clock, employeeOnly: true },
     { path: '/time-off', label: 'Time Off', icon: Calendar },
     { path: '/payroll', label: 'Payroll', icon: DollarSign },
@@ -59,11 +60,9 @@ export default function MainLayout() {
     { path: '/calendar', label: 'Calendar', icon: Calendar },
     { path: '/performance', label: 'Performance', icon: Award, employeeOnly: true },
     { path: '/announcements', label: 'Announcements', icon: Megaphone, dotBadge: true },
-    { path: '/help', label: 'Help & Support', icon: HelpCircle },
-    { path: '/settings', label: 'Settings', icon: Settings },
-    // Admin-only items
-    { path: '/employees', label: 'Employee Directory', icon: User, adminOnly: true },
     { path: '/reports', label: 'Reports & Analytics', icon: BarChart3, adminOnly: true },
+    { path: '/settings', label: 'Settings', icon: Settings },
+    { path: '/help', label: 'Help & Support', icon: HelpCircle },
   ];
 
   const navItems = allNavItems.filter(item => {
