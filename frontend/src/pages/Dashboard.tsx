@@ -199,22 +199,24 @@ export default function Dashboard() {
           </>
         )}
 
-        <Card className="bg-white border-sky-100/80 shadow-sm rounded-2xl p-5 hover:-translate-y-1 hover:shadow-xl hover:border-sky-200 transition-all duration-300 group">
-          <div className="flex justify-between items-start">
-            <div>
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Net Take-Home Pay</span>
-              <span className="text-3xl font-black font-mono text-sky-600 mt-1 block group-hover:scale-105 transition-transform origin-left">
-                {formatCurrency(mySalary?.net_salary)}
-              </span>
+        {!isAdmin && (
+          <Card className="bg-white border-sky-100/80 shadow-sm rounded-2xl p-5 hover:-translate-y-1 hover:shadow-xl hover:border-sky-200 transition-all duration-300 group">
+            <div className="flex justify-between items-start">
+              <div>
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Net Take-Home Pay</span>
+                <span className="text-3xl font-black font-mono text-sky-600 mt-1 block group-hover:scale-105 transition-transform origin-left">
+                  {formatCurrency(mySalary?.net_salary)}
+                </span>
+              </div>
+              <div className="p-3 bg-sky-50 rounded-2xl text-sky-600 group-hover:scale-110 transition-transform">
+                <DollarSign className="w-5 h-5" />
+              </div>
             </div>
-            <div className="p-3 bg-sky-50 rounded-2xl text-sky-600 group-hover:scale-110 transition-transform">
-              <DollarSign className="w-5 h-5" />
+            <div className="mt-3 text-[11px] text-slate-500 font-semibold">
+              <span>Gross: {formatCurrency(mySalary?.gross_salary)}</span>
             </div>
-          </div>
-          <div className="mt-3 text-[11px] text-slate-500 font-semibold">
-            <span>Gross: {formatCurrency(mySalary?.gross_salary)}</span>
-          </div>
-        </Card>
+          </Card>
+        )}
 
         <Card className="bg-white border-sky-100/80 shadow-sm rounded-2xl p-5 hover:-translate-y-1 hover:shadow-xl hover:border-sky-200 transition-all duration-300 group">
           <div className="flex justify-between items-start">
@@ -238,83 +240,88 @@ export default function Dashboard() {
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {/* Left Column: Attendance Card & Trend Chart */}
         <div className="lg:col-span-2 space-y-6">
-          <TodayAttendanceCard 
-            attendance={todayAttendance} 
-            onUpdate={fetchDashboardData} 
-          />
+          {!isAdmin && (
+            <TodayAttendanceCard 
+              attendance={todayAttendance} 
+              onUpdate={fetchDashboardData} 
+            />
+          )}
 
-          {/* Visual Shift Activity Chart */}
-          <Card className="bg-white border-sky-100/80 shadow-sm rounded-2xl p-6">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h3 className="font-extrabold text-slate-900 text-base flex items-center space-x-2">
-                  <BarChart3 className="w-4 h-4 text-sky-600" />
-                  <span>Shift Attendance Activity</span>
-                </h3>
-                <p className="text-xs text-slate-500 mt-0.5">Weekly logged hours overview</p>
-              </div>
-              <span className="text-[10px] font-extrabold bg-sky-100 text-sky-800 px-2.5 py-1 rounded-full uppercase">
-                Current Week
-              </span>
-            </div>
-
-            {/* Visual Bar Chart */}
-            <div className="h-44 flex items-end justify-between gap-3 pt-6 px-4 bg-sky-50/40 rounded-2xl border border-sky-100">
-              {weeklyBars.map((bar, idx) => (
-                <div key={idx} className="flex-1 flex flex-col items-center gap-2 h-full justify-end group">
-                  <div className="w-full max-w-[36px] bg-slate-200/80 rounded-t-xl overflow-hidden h-full flex items-end" title={bar.hasData ? `${bar.hours}h` : 'No data'}>
-                    <div 
-                      className={`w-full rounded-t-xl transition-all duration-500 ${bar.hasData ? 'bg-gradient-to-t from-sky-500 to-blue-600 group-hover:from-sky-400 group-hover:to-blue-500' : 'bg-slate-300/50'}`}
-                      style={{ height: bar.height }}
-                    />
-                  </div>
-                  <span className="text-[10px] font-bold text-slate-600">{bar.day}</span>
+          {!isAdmin && (
+            <Card className="bg-white border-sky-100/80 shadow-sm rounded-2xl p-6">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h3 className="font-extrabold text-slate-900 text-base flex items-center space-x-2">
+                    <BarChart3 className="w-4 h-4 text-sky-600" />
+                    <span>Shift Attendance Activity</span>
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-0.5">Weekly logged hours overview</p>
                 </div>
-              ))}
-            </div>
-          </Card>
+                <span className="text-[10px] font-extrabold bg-sky-100 text-sky-800 px-2.5 py-1 rounded-full uppercase">
+                  Current Week
+                </span>
+              </div>
+
+              {/* Visual Bar Chart */}
+              <div className="h-44 flex items-end justify-between gap-3 pt-6 px-4 bg-sky-50/40 rounded-2xl border border-sky-100">
+                {weeklyBars.map((bar, idx) => (
+                  <div key={idx} className="flex-1 flex flex-col items-center gap-2 h-full justify-end group">
+                    <div className="w-full max-w-[36px] bg-slate-200/80 rounded-t-xl overflow-hidden h-full flex items-end" title={bar.hasData ? `${bar.hours}h` : 'No data'}>
+                      <div 
+                        className={`w-full rounded-t-xl transition-all duration-500 ${bar.hasData ? 'bg-gradient-to-t from-sky-500 to-blue-600 group-hover:from-sky-400 group-hover:to-blue-500' : 'bg-slate-300/50'}`}
+                        style={{ height: bar.height }}
+                      />
+                    </div>
+                    <span className="text-[10px] font-bold text-slate-600">{bar.day}</span>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          )}
         </div>
 
         {/* Right Column: Time Off & Portal Navigation */}
         <div className="space-y-6">
           {/* Leave Entitlement Progress Meters */}
-          <Card className="bg-white border-sky-100/80 shadow-sm rounded-2xl overflow-hidden">
-            <CardHeader className="border-b border-slate-100 pb-4">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-base font-bold text-slate-900 flex items-center space-x-2">
-                  <Calendar className="w-4 h-4 text-sky-600" />
-                  <span>Leave Balances</span>
-                </CardTitle>
-                <Link to="/time-off" className="text-xs font-bold text-sky-600 hover:text-sky-800 transition-colors">
-                  Manage →
-                </Link>
-              </div>
-            </CardHeader>
+          {!isAdmin && (
+            <Card className="bg-white border-sky-100/80 shadow-sm rounded-2xl overflow-hidden">
+              <CardHeader className="border-b border-slate-100 pb-4">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-base font-bold text-slate-900 flex items-center space-x-2">
+                    <Calendar className="w-4 h-4 text-sky-600" />
+                    <span>Leave Balances</span>
+                  </CardTitle>
+                  <Link to="/time-off" className="text-xs font-bold text-sky-600 hover:text-sky-800 transition-colors">
+                    Manage →
+                  </Link>
+                </div>
+              </CardHeader>
 
-            <CardContent className="p-5 space-y-4">
-              {leaveBalances.length === 0 ? (
-                <p className="text-xs text-slate-400 italic text-center py-4">No leave balances allocated yet.</p>
-              ) : (
-                leaveBalances.slice(0, 3).map(b => {
-                  const pct = Math.min(100, Math.round((b.remaining_days / (b.max_days || 1)) * 100));
-                  return (
-                    <div key={b.leave_type_id} className="space-y-1.5">
-                      <div className="flex justify-between text-xs font-bold">
-                        <span className="text-slate-800">{b.leave_type_name}</span>
-                        <span className="font-mono text-slate-900">{b.remaining_days} / {b.max_days} days</span>
+              <CardContent className="p-5 space-y-4">
+                {leaveBalances.length === 0 ? (
+                  <p className="text-xs text-slate-400 italic text-center py-4">No leave balances allocated yet.</p>
+                ) : (
+                  leaveBalances.slice(0, 3).map(b => {
+                    const pct = Math.min(100, Math.round((b.remaining_days / (b.max_days || 1)) * 100));
+                    return (
+                      <div key={b.leave_type_id} className="space-y-1.5">
+                        <div className="flex justify-between text-xs font-bold">
+                          <span className="text-slate-800">{b.leave_type_name}</span>
+                          <span className="font-mono text-slate-900">{b.remaining_days} / {b.max_days} days</span>
+                        </div>
+                        <div className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden p-0.5">
+                          <div 
+                            className="h-full bg-gradient-to-r from-sky-400 to-blue-600 rounded-full transition-all duration-500"
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
                       </div>
-                      <div className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden p-0.5">
-                        <div 
-                          className="h-full bg-gradient-to-r from-sky-400 to-blue-600 rounded-full transition-all duration-500"
-                          style={{ width: `${pct}%` }}
-                        />
-                      </div>
-                    </div>
-                  );
-                })
-              )}
-            </CardContent>
-          </Card>
+                    );
+                  })
+                )}
+              </CardContent>
+            </Card>
+          )}
 
           {/* Quick Hub Navigation Cards */}
           <Card className="bg-slate-950 text-white rounded-2xl p-5 shadow-xl border border-slate-800 relative overflow-hidden">
@@ -326,40 +333,74 @@ export default function Dashboard() {
             </h4>
 
             <div className="grid grid-cols-2 gap-2.5 text-xs font-bold">
-              <Link 
-                to="/payroll"
-                className="bg-slate-900 hover:bg-slate-800 p-3 rounded-xl flex items-center justify-between text-slate-200 hover:text-white transition-all hover:scale-105 border border-slate-800"
-              >
-                <span>Payslips</span>
-                <ArrowRight className="w-3.5 h-3.5 text-sky-400" />
-              </Link>
+              {!isAdmin ? (
+                <>
+                  <Link 
+                    to="/payroll"
+                    className="bg-slate-900 hover:bg-slate-800 p-3 rounded-xl flex items-center justify-between text-slate-200 hover:text-white transition-all hover:scale-105 border border-slate-800"
+                  >
+                    <span>Payslips</span>
+                    <ArrowRight className="w-3.5 h-3.5 text-sky-400" />
+                  </Link>
 
-              <Link 
-                to="/documents"
-                className="bg-slate-900 hover:bg-slate-800 p-3 rounded-xl flex items-center justify-between text-slate-200 hover:text-white transition-all hover:scale-105 border border-slate-800"
-              >
-                <span>Documents</span>
-                <ArrowRight className="w-3.5 h-3.5 text-sky-400" />
-              </Link>
+                  <Link 
+                    to="/documents"
+                    className="bg-slate-900 hover:bg-slate-800 p-3 rounded-xl flex items-center justify-between text-slate-200 hover:text-white transition-all hover:scale-105 border border-slate-800"
+                  >
+                    <span>Documents</span>
+                    <ArrowRight className="w-3.5 h-3.5 text-sky-400" />
+                  </Link>
 
-              {isAdmin && (
-                <Link 
-                  to="/employees"
-                  className="bg-slate-900 hover:bg-slate-800 p-3 rounded-xl flex items-center justify-between text-slate-200 hover:text-white transition-all hover:scale-105 border border-slate-800"
-                >
-                  <span>Employees</span>
-                  <ArrowRight className="w-3.5 h-3.5 text-sky-400" />
-                </Link>
-              )}
+                  <Link 
+                    to="/time-off"
+                    className="bg-slate-900 hover:bg-slate-800 p-3 rounded-xl flex items-center justify-between text-slate-200 hover:text-white transition-all hover:scale-105 border border-slate-800"
+                  >
+                    <span>Apply Leave</span>
+                    <ArrowRight className="w-3.5 h-3.5 text-sky-400" />
+                  </Link>
 
-              {isAdmin && (
-                <Link 
-                  to="/reports"
-                  className="bg-slate-900 hover:bg-slate-800 p-3 rounded-xl flex items-center justify-between text-slate-200 hover:text-white transition-all hover:scale-105 border border-slate-800"
-                >
-                  <span>HR Analytics</span>
-                  <ArrowRight className="w-3.5 h-3.5 text-sky-400" />
-                </Link>
+                  <Link 
+                    to="/attendance"
+                    className="bg-slate-900 hover:bg-slate-800 p-3 rounded-xl flex items-center justify-between text-slate-200 hover:text-white transition-all hover:scale-105 border border-slate-800"
+                  >
+                    <span>Attendance</span>
+                    <ArrowRight className="w-3.5 h-3.5 text-sky-400" />
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <Link 
+                    to="/employees"
+                    className="bg-slate-900 hover:bg-slate-800 p-3 rounded-xl flex items-center justify-between text-slate-200 hover:text-white transition-all hover:scale-105 border border-slate-800"
+                  >
+                    <span>Employees</span>
+                    <ArrowRight className="w-3.5 h-3.5 text-sky-400" />
+                  </Link>
+
+                  <Link 
+                    to="/reports"
+                    className="bg-slate-900 hover:bg-slate-800 p-3 rounded-xl flex items-center justify-between text-slate-200 hover:text-white transition-all hover:scale-105 border border-slate-800"
+                  >
+                    <span>HR Analytics</span>
+                    <ArrowRight className="w-3.5 h-3.5 text-sky-400" />
+                  </Link>
+
+                  <Link 
+                    to="/time-off"
+                    className="bg-slate-900 hover:bg-slate-800 p-3 rounded-xl flex items-center justify-between text-slate-200 hover:text-white transition-all hover:scale-105 border border-slate-800"
+                  >
+                    <span>Leave Approvals</span>
+                    <ArrowRight className="w-3.5 h-3.5 text-sky-400" />
+                  </Link>
+
+                  <Link 
+                    to="/payroll"
+                    className="bg-slate-900 hover:bg-slate-800 p-3 rounded-xl flex items-center justify-between text-slate-200 hover:text-white transition-all hover:scale-105 border border-slate-800"
+                  >
+                    <span>Run Payroll</span>
+                    <ArrowRight className="w-3.5 h-3.5 text-sky-400" />
+                  </Link>
+                </>
               )}
             </div>
           </Card>

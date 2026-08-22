@@ -35,7 +35,7 @@ export default function TimeOffPage() {
     const { user } = useAuth();
     const isAdmin = user?.role === 'ADMIN';
 
-    const [activeTab, setActiveTab] = useState<'my' | 'all'>('my');
+    const [activeTab, setActiveTab] = useState<'my' | 'all'>(isAdmin ? 'all' : 'my');
 
     // Modals
     const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
@@ -162,36 +162,15 @@ export default function TimeOffPage() {
                 </div>
 
                 <div className="flex items-center space-x-3 self-start sm:self-auto shrink-0">
-                    {isAdmin && (
-                        <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200/80">
-                            <button
-                                onClick={() => setActiveTab('my')}
-                                className={`px-4 py-2 text-xs font-black rounded-lg transition-colors flex items-center space-x-1.5 ${
-                                    activeTab === 'my' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'
-                                }`}
-                            >
-                                <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                                <span>My Time Off</span>
-                            </button>
-                            <button
-                                onClick={() => setActiveTab('all')}
-                                className={`px-4 py-2 text-xs font-black rounded-lg transition-colors flex items-center space-x-1.5 ${
-                                    activeTab === 'all' ? 'bg-white text-[#0052FF] shadow-sm' : 'text-slate-600 hover:text-slate-900'
-                                }`}
-                            >
-                                <Users className="w-3.5 h-3.5 text-slate-400" />
-                                <span>All Leave Requests</span>
-                            </button>
-                        </div>
+                    {!isAdmin && (
+                        <Button 
+                            onClick={() => setIsRequestModalOpen(true)}
+                            className="bg-[#0052FF] hover:bg-blue-700 text-white font-black text-xs px-4 h-10 space-x-1.5 rounded-xl shadow-md shadow-blue-500/10"
+                        >
+                            <Plus className="w-4 h-4 text-white" />
+                            <span>Request Time Off</span>
+                        </Button>
                     )}
-
-                    <Button 
-                        onClick={() => setIsRequestModalOpen(true)}
-                        className="bg-[#0052FF] hover:bg-blue-700 text-white font-black text-xs px-4 h-10 space-x-1.5 rounded-xl shadow-md shadow-blue-500/10"
-                    >
-                        <Plus className="w-4 h-4 text-white" />
-                        <span>Request Time Off</span>
-                    </Button>
                 </div>
             </div>
 

@@ -33,7 +33,7 @@ export default function PayrollPage() {
     const { user } = useAuth();
     const isAdmin = user?.role === 'ADMIN';
 
-    const [activeTab, setActiveTab] = useState<'my' | 'all'>('my');
+    const [activeTab, setActiveTab] = useState<'my' | 'all'>(isAdmin ? 'all' : 'my');
 
     // Modals
     const [selectedPayslip, setSelectedPayslip] = useState<Payroll | null>(null);
@@ -169,26 +169,7 @@ export default function PayrollPage() {
                 </div>
 
                 <div className="flex items-center space-x-3 self-start sm:self-auto">
-                    {isAdmin && (
-                        <div className="flex bg-slate-100 p-1 rounded-lg border border-slate-200">
-                            <button
-                                onClick={() => setActiveTab('my')}
-                                className={`px-3 py-1.5 text-xs font-bold rounded-md transition-colors ${
-                                    activeTab === 'my' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'
-                                }`}
-                            >
-                                My Payslips
-                            </button>
-                            <button
-                                onClick={() => setActiveTab('all')}
-                                className={`px-3 py-1.5 text-xs font-bold rounded-md transition-colors ${
-                                    activeTab === 'all' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'
-                                }`}
-                            >
-                                All Employee Payrolls
-                            </button>
-                        </div>
-                    )}
+                    {/* Admin Actions */}
 
                     {isAdmin && (
                         <Button 

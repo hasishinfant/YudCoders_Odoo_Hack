@@ -33,9 +33,9 @@ export default function PerformancePage() {
             const today = now.toISOString().split('T')[0];
 
             const [leaveRes, attendRes, salaryRes] = await Promise.all([
-                getMyLeaveBalances(),
-                getMyAttendance({ start_date: startDate, end_date: today, limit: 200 }),
-                getMySalary()
+                getMyLeaveBalances().catch(() => ({ data: [] })),
+                getMyAttendance({ start_date: startDate, end_date: today, limit: 200 }).catch(() => ({ data: [] })),
+                getMySalary().catch(() => ({ data: null }))
             ]);
 
             const leaveBalances: LeaveBalance[] = leaveRes.data || [];
@@ -49,7 +49,17 @@ export default function PerformancePage() {
 
             setStats({ attendancePct, presentDays, totalDays, extraHours, leaveBalances, salary });
         } catch (err: any) {
-            setError(err.response?.data?.detail || 'Failed to load performance data.');
+            let msg = 'Failed to load performance data.';
+            if (err.response?.data?.detail) {
+                if (typeof err.response.data.detail === 'string') {
+                    msg = err.response.data.detail;
+                } else if (Array.isArray(err.response.data.detail)) {
+                    msg = err.response.data.detail.map((d: any) => d.msg || JSON.stringify(d)).join(', ');
+                } else {
+                    msg = JSON.stringify(err.response.data.detail);
+                }
+            }
+            setError(msg);
         } finally {
             setLoading(false);
         }

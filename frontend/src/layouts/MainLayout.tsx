@@ -40,13 +40,13 @@ export default function MainLayout() {
 
   const allNavItems = [
     { path: '/', label: 'Dashboard', icon: LayoutDashboard },
-    { path: '/profile', label: 'My Profile', icon: User },
-    { path: '/attendance', label: 'Attendance', icon: Clock },
-    { path: '/time-off', label: 'Leave Requests', icon: Calendar, badge: '2', badgeColor: 'bg-orange-500' },
+    { path: '/profile', label: 'My Profile', icon: User, employeeOnly: true },
+    { path: '/attendance', label: 'Attendance', icon: Clock, employeeOnly: true },
+    { path: '/time-off', label: 'Leave Requests', icon: Calendar },
     { path: '/payroll', label: 'Payroll', icon: DollarSign },
-    { path: '/documents', label: 'Documents', icon: Folder },
+    { path: '/documents', label: 'Documents', icon: Folder, employeeOnly: true },
     { path: '/calendar', label: 'Calendar', icon: Calendar },
-    { path: '/performance', label: 'Performance', icon: Award },
+    { path: '/performance', label: 'Performance', icon: Award, employeeOnly: true },
     { path: '/announcements', label: 'Announcements', icon: Megaphone, dotBadge: true },
     { path: '/help', label: 'Help & Support', icon: HelpCircle },
     { path: '/settings', label: 'Settings', icon: Settings },
@@ -55,7 +55,11 @@ export default function MainLayout() {
     { path: '/reports', label: 'Reports & Analytics', icon: BarChart3, adminOnly: true },
   ];
 
-  const navItems = allNavItems.filter(item => !item.adminOnly || user?.role === 'ADMIN');
+  const navItems = allNavItems.filter(item => {
+    if (item.adminOnly && user?.role !== 'ADMIN') return false;
+    if (item.employeeOnly && user?.role === 'ADMIN') return false;
+    return true;
+  });
 
   return (
     <div className="flex min-h-screen bg-[#F4F7FC] font-sans antialiased text-slate-900">
@@ -85,7 +89,7 @@ export default function MainLayout() {
                 </svg>
               </div>
               <div>
-                <span className="text-xl font-extrabold text-slate-900 tracking-tight block leading-tight">{(user as any)?.company_name || 'HR Portal'}</span>
+                <span className="text-xl font-extrabold text-slate-900 tracking-tight block leading-tight">{(user as any)?.company_name || (user?.role === 'ADMIN' ? 'HR Portal' : 'Employee Portal')}</span>
                 <span className="text-[10px] text-slate-400 font-semibold tracking-wider block">HR Management System</span>
                 <span className={`inline-block text-[8px] font-black tracking-wider uppercase px-2 py-0.5 mt-1 rounded-full ${
                   user?.role === 'ADMIN' ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-[#0052FF]'
@@ -228,18 +232,8 @@ export default function MainLayout() {
                 onClick={() => setUserDropdownOpen(!userDropdownOpen)}
                 className="flex items-center space-x-3 p-1 rounded-xl hover:bg-slate-100 transition-colors text-left"
               >
-                <div className="w-9 h-9 rounded-full bg-slate-200 overflow-hidden shrink-0 border border-slate-300">
-                  <img 
-                    src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=200&auto=format&fit=crop" 
-                    alt="User Avatar"
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      (e.target as HTMLElement).style.display = 'none';
-                    }}
-                  />
-                  <div className="w-full h-full bg-[#0052FF] text-white font-bold flex items-center justify-center text-sm">
-                    {user?.email?.charAt(0).toUpperCase()}
-                  </div>
+                <div className="w-9 h-9 rounded-full bg-[#0052FF] text-white font-bold flex items-center justify-center text-sm shrink-0 border border-blue-400 shadow-inner">
+                  {user?.email?.charAt(0).toUpperCase()}
                 </div>
 
                  <div className="hidden md:block">

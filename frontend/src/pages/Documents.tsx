@@ -25,7 +25,7 @@ export default function DocumentsPage() {
     const { user } = useAuth();
     const isAdmin = user?.role === 'ADMIN';
 
-    const [activeTab, setActiveTab] = useState<'my' | 'all'>('my');
+    const [activeTab, setActiveTab] = useState<'my' | 'all'>(isAdmin ? 'all' : 'my');
 
     // Documents State
     const [myDocuments, setMyDocuments] = useState<DocumentItem[]>([]);
@@ -120,38 +120,19 @@ export default function DocumentsPage() {
                 </div>
 
                 <div className="flex items-center space-x-3 self-start sm:self-auto">
-                    {isAdmin && (
-                        <div className="flex bg-slate-100 p-1 rounded-lg border border-slate-200">
-                            <button
-                                onClick={() => setActiveTab('my')}
-                                className={`px-3 py-1.5 text-xs font-bold rounded-md transition-colors ${
-                                    activeTab === 'my' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'
-                                }`}
-                            >
-                                My Documents
-                            </button>
-                            <button
-                                onClick={() => setActiveTab('all')}
-                                className={`px-3 py-1.5 text-xs font-bold rounded-md transition-colors ${
-                                    activeTab === 'all' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'
-                                }`}
-                            >
-                                All Documents
-                            </button>
-                        </div>
+                    {!isAdmin && (
+                        <Button 
+                            onClick={() => {
+                                setTargetEmpId(user?.id || 1);
+                                setTargetEmpName(user?.email || '');
+                                setIsUploadOpen(true);
+                            }}
+                            className="bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs px-4 h-10 space-x-1.5"
+                        >
+                            <Upload className="w-4 h-4" />
+                            <span>Upload Document</span>
+                        </Button>
                     )}
-
-                    <Button 
-                        onClick={() => {
-                            setTargetEmpId(user?.id || 1);
-                            setTargetEmpName(user?.email || '');
-                            setIsUploadOpen(true);
-                        }}
-                        className="bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs px-4 h-10 space-x-1.5"
-                    >
-                        <Upload className="w-4 h-4" />
-                        <span>Upload Document</span>
-                    </Button>
                 </div>
             </div>
 

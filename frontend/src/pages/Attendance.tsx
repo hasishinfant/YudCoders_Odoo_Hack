@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getMyAttendance, getTodayAttendance } from '@/services/attendance';
+import { useAuth } from '@/hooks/useAuth';
+import { getMyAttendance, getTodayAttendance, type AttendanceRecord } from '@/services/attendance';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { 
@@ -20,21 +21,28 @@ import {
 
 export default function AttendancePage() {
     const navigate = useNavigate();
+    const { user } = useAuth();
     
     // View state
     const [viewMode, setViewMode] = useState<'month' | 'week' | 'list'>('month');
-    const [selectedMonth, setSelectedMonth] = useState('May 2025');
-    const [selectedDate, setSelectedDate] = useState<number>(10);
+    
+    const today = new Date();
+    const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    const currentMonthStr = `${monthNames[today.getMonth()]} ${today.getFullYear()}`;
+    
+    const [selectedMonth, setSelectedMonth] = useState(currentMonthStr);
+    const [selectedDate, setSelectedDate] = useState<number>(today.getDate());
     const [policyModalOpen, setPolicyModalOpen] = useState(false);
     const [toastMessage, setToastMessage] = useState<string | null>(null);
+    const [attendanceList, setAttendanceList] = useState<AttendanceRecord[]>([]);
 
     useEffect(() => {
         const loadData = async () => {
             try {
-                await Promise.all([
-                    getTodayAttendance().catch(() => ({ data: null })),
-                    getMyAttendance().catch(() => ({ data: [] }))
-                ]);
+                const res = await getMyAttendance();
+                if (res && res.data) {
+                    setAttendanceList(res.data);
+                }
             } catch (err) {
                 console.error('Failed to load attendance', err);
             }
@@ -54,6 +62,37 @@ export default function AttendancePage() {
             showToast("Failed to open print window. Please allow popups.");
             return;
         }
+
+        const currentMonthDays = calendarDays.filter(day => !day.isPrev && !day.isNext);
+        const rowsHtml = currentMonthDays.map(item => {
+            const dateStr = `${item.day} ${monthStr} ${year}`;
+            const dateKey = `${year}-${String(monthIndex + 1).padStart(2, '0')}-${String(item.day).padStart(2, '0')}`;
+            const record = attendanceList.find(r => r.date === dateKey);
+
+            const statusClass = record ? `status-${record.status.toLowerCase()}` : (new Date(year, monthIndex, item.day).getDay() % 6 === 0 ? 'status-leave' : 'status-absent');
+            const statusLabel = record ? (record.status === 'PRESENT' ? 'Present' : record.status === 'HALF_DAY' ? 'Half Day' : record.status === 'LEAVE' ? 'Leave' : 'Absent') : (new Date(year, monthIndex, item.day).getDay() % 6 === 0 ? 'Weekly Off' : 'No Record');
+
+            const checkInVal = record?.check_in ? formatTime(record.check_in) : '--:--';
+            const checkOutVal = record?.check_out ? formatTime(record.check_out) : '--:--';
+            const workingHoursVal = record?.worked_hours ? `${Math.floor(record.worked_hours)}h ${String(Math.round((record.worked_hours % 1) * 60)).padStart(2, '0')}m` : '0h 00m';
+            const breakTimeVal = record?.check_in ? '1h 00m' : '0h 00m';
+            const overtimeVal = record?.extra_hours ? `${Math.floor(record.extra_hours)}h ${String(Math.round((record.extra_hours % 1) * 60)).padStart(2, '0')}m` : '0h 00m';
+
+            return `
+                <tr>
+                    <td>${dateStr}</td>
+                    <td class="${statusClass}">${statusLabel}</td>
+                    <td>${checkInVal}</td>
+                    <td>${checkOutVal}</td>
+                    <td>${workingHoursVal}</td>
+                    <td>${breakTimeVal}</td>
+                    <td>${overtimeVal}</td>
+                </tr>
+            `;
+        }).join('');
+
+        const totalWorkedHoursSum = attendanceList.reduce((acc, r) => acc + (r.worked_hours || 0), 0);
+        const totalWorkedHrsStr = `${Math.floor(totalWorkedHoursSum)}h ${String(Math.round((totalWorkedHoursSum % 1) * 60)).padStart(2, '0')}m`;
 
         const htmlContent = `
             <!DOCTYPE html>
@@ -85,12 +124,12 @@ export default function AttendancePage() {
                 </div>
 
                 <div class="meta-grid">
-                    <div class="meta-item">Employee Name: <strong>{user?.email?.split('@')[0].toUpperCase() || 'Employee'}</strong></div>
+                    <div class="meta-item">Employee Name: <strong>${user?.email?.split('@')[0].toUpperCase() || 'Employee'}</strong></div>
                     <div class="meta-item">Employee ID: <strong>EMP00123</strong></div>
                     <div class="meta-item">Department: <strong>Engineering</strong></div>
-                    <div class="meta-item">Days Present: <strong>18 / 22 Days</strong></div>
-                    <div class="meta-item">Total Worked Hours: <strong>162h 45m</strong></div>
-                    <div class="meta-item">Average Check-in: <strong>09:03 AM</strong></div>
+                    <div class="meta-item">Days Present: <strong>${presentDays} / ${totalMonthDays} Days</strong></div>
+                    <div class="meta-item">Total Worked Hours: <strong>${totalWorkedHrsStr}</strong></div>
+                    <div class="meta-item">Average Check-in: <strong>09:00 AM</strong></div>
                 </div>
 
                 <table>
@@ -106,16 +145,7 @@ export default function AttendancePage() {
                         </tr>
                     </thead>
                     <tbody>
-                        <tr><td>01 May 2025</td><td class="status-present">Present</td><td>09:02 AM</td><td>06:05 PM</td><td>9h 03m</td><td>1h 00m</td><td>0h 00m</td></tr>
-                        <tr><td>02 May 2025</td><td class="status-present">Present</td><td>09:04 AM</td><td>06:02 PM</td><td>8h 58m</td><td>1h 00m</td><td>0h 00m</td></tr>
-                        <tr><td>03 May 2025</td><td class="status-present">Half Day</td><td>09:15 AM</td><td>01:30 PM</td><td>4h 15m</td><td>0h 30m</td><td>0h 00m</td></tr>
-                        <tr><td>04 May 2025</td><td class="status-absent">Absent (Weekly Off)</td><td>--:--</td><td>--:--</td><td>0h 00m</td><td>0h 00m</td><td>0h 00m</td></tr>
-                        <tr><td>05 May 2025</td><td class="status-present">Present</td><td>09:04 AM</td><td>06:05 PM</td><td>9h 01m</td><td>1h 00m</td><td>0h 00m</td></tr>
-                        <tr><td>06 May 2025</td><td class="status-present">Present</td><td>09:04 AM</td><td>06:01 PM</td><td>8h 57m</td><td>1h 00m</td><td>0h 00m</td></tr>
-                        <tr><td>07 May 2025</td><td class="status-present">Present</td><td>09:01 AM</td><td>05:58 PM</td><td>8h 57m</td><td>1h 00m</td><td>0h 00m</td></tr>
-                        <tr><td>08 May 2025</td><td class="status-leave">Leave (Personal)</td><td>--:--</td><td>--:--</td><td>0h 00m</td><td>0h 00m</td><td>0h 00m</td></tr>
-                        <tr><td>09 May 2025</td><td class="status-present">Present</td><td>09:03 AM</td><td>06:04 PM</td><td>9h 01m</td><td>1h 00m</td><td>0h 00m</td></tr>
-                        <tr><td>10 May 2025</td><td class="status-present">Present</td><td>09:03 AM</td><td>06:04 PM</td><td>9h 01m</td><td>1h 00m</td><td>0h 00m</td></tr>
+                        ${rowsHtml}
                     </tbody>
                 </table>
 
@@ -132,55 +162,79 @@ export default function AttendancePage() {
         showToast("Generating official Attendance PDF Report...");
     };
 
-    // Calendar Day Tiles Data
-    const calendarDays = [
-        { day: 28, isPrev: true },
-        { day: 29, isPrev: true },
-        { day: 30, isPrev: true },
-        { day: 1, status: 'present', label: 'Present' },
-        { day: 2, status: 'present', label: 'Present' },
-        { day: 3, status: 'halfday', label: 'Half Day' },
-        { day: 4, status: 'absent', label: 'Absent' },
-        { day: 5, status: 'present', label: 'Present' },
-        { day: 6, status: 'present', label: 'Present' },
-        { day: 7, status: 'present', label: 'Present' },
-        { day: 8, status: 'leave', label: 'Leave' },
-        { day: 9, status: 'present', label: 'Present' },
-        { day: 10, status: 'present', label: 'Present', isSelected: true },
-        { day: 11, status: 'present', label: 'Present' },
-        { day: 12, status: 'present', label: 'Present' },
-        { day: 13, status: 'present', label: 'Present' },
-        { day: 14, status: 'present', label: 'Present' },
-        { day: 15, status: 'holiday', label: 'Holiday' },
-        { day: 16, status: 'present', label: 'Present' },
-        { day: 17, status: 'present', label: 'Present' },
-        { day: 18, status: 'present', label: 'Present' },
-        { day: 19, status: 'present', label: 'Present' },
-        { day: 20, status: 'leave', label: 'Leave' },
-        { day: 21, status: 'present', label: 'Present' },
-        { day: 22, status: 'present', label: 'Present' },
-        { day: 23, status: 'present', label: 'Present' },
-        { day: 24, status: 'halfday', label: 'Half Day' },
-        { day: 25, status: 'present', label: 'Present' },
-        { day: 26, status: 'present', label: 'Present' },
-        { day: 27, status: 'present', label: 'Present' },
-        { day: 28, status: 'absent', label: 'Absent' },
-        { day: 29, status: 'present', label: 'Present' },
-        { day: 30, status: 'present', label: 'Present' },
-        { day: 31, status: 'holiday', label: 'Holiday' },
-        { day: 1, isNext: true }
-    ];
+    const [yearStr, monthStr] = selectedMonth.split(' ');
+    const year = parseInt(yearStr) || today.getFullYear();
+    const monthIndex = monthNames.indexOf(monthStr) !== -1 ? monthNames.indexOf(monthStr) : today.getMonth();
 
-    // Details for Selected Day (10 May 2025)
+    const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
+    const firstDayOfWeek = new Date(year, monthIndex, 1).getDay();
+    const firstDayOffset = firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1;
+
+    const calendarDays: any[] = [];
+
+    const prevMonthDays = new Date(year, monthIndex, 0).getDate();
+    for (let i = firstDayOffset - 1; i >= 0; i--) {
+        calendarDays.push({ day: prevMonthDays - i, isPrev: true });
+    }
+
+    for (let d = 1; d <= daysInMonth; d++) {
+        const dateString = `${year}-${String(monthIndex + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        const record = attendanceList.find(r => r.date === dateString);
+        
+        let status = '';
+        let label = '';
+        
+        if (record) {
+            status = record.status.toLowerCase();
+            label = record.status === 'PRESENT' ? 'Present' : record.status === 'HALF_DAY' ? 'Half Day' : record.status === 'LEAVE' ? 'Leave' : 'Absent';
+        } else {
+            const dayOfWeek = new Date(year, monthIndex, d).getDay();
+            if (dayOfWeek === 0 || dayOfWeek === 6) {
+                status = 'holiday';
+                label = 'Weekly Off';
+            }
+        }
+        calendarDays.push({ day: d, status, label });
+    }
+
+    const totalTiles = Math.ceil(calendarDays.length / 7) * 7;
+    const nextPadding = totalTiles - calendarDays.length;
+    for (let i = 1; i <= nextPadding; i++) {
+        calendarDays.push({ day: i, isNext: true });
+    }
+
+    const totalMonthDays = calendarDays.filter(item => !item.isPrev && !item.isNext).length;
+    const presentDays = calendarDays.filter(item => item.status === 'present').length;
+    const absentDays = calendarDays.filter(item => item.status === 'absent').length;
+    const halfDays = calendarDays.filter(item => item.status === 'halfday').length;
+    const leaveDays = calendarDays.filter(item => item.status === 'leave').length;
+    const holidayDays = calendarDays.filter(item => item.status === 'holiday').length;
+    const attendancePercentage = totalMonthDays > 0 ? Math.round(((presentDays + (halfDays * 0.5)) / totalMonthDays) * 100) : 0;
+
+    // Dynamic Selected Day Details
+    const selectedDateString = `${year}-${String(monthIndex + 1).padStart(2, '0')}-${String(selectedDate).padStart(2, '0')}`;
+    const selectedRecord = attendanceList.find(r => r.date === selectedDateString);
+
+    const getDayName = (y: number, m: number, d: number) => {
+        const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        return days[new Date(y, m, d).getDay()];
+    };
+
+    const formatTime = (isoString?: string) => {
+        if (!isoString) return '--:--';
+        const d = new Date(isoString);
+        return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+    };
+
     const selectedDayDetails = {
-        dateStr: `Saturday, ${selectedDate} May 2025`,
-        status: selectedDate === 10 ? 'Present' : selectedDate === 8 ? 'Leave' : selectedDate === 4 ? 'Absent' : 'Present',
-        checkIn: selectedDate === 10 ? '09:03 AM' : selectedDate === 8 ? '--:--' : '09:04 AM',
-        checkOut: selectedDate === 10 ? '06:04 PM' : selectedDate === 8 ? '--:--' : '06:01 PM',
-        workingHours: selectedDate === 10 ? '9h 01m' : selectedDate === 8 ? '0h 00m' : '8h 57m',
-        breakTime: '1h 00m',
-        overtime: '0h 00m',
-        source: 'Web Check-In',
+        dateStr: `${getDayName(year, monthIndex, selectedDate)}, ${selectedDate} ${monthStr} ${year}`,
+        status: selectedRecord ? (selectedRecord.status === 'PRESENT' ? 'Present' : selectedRecord.status === 'HALF_DAY' ? 'Half Day' : selectedRecord.status === 'LEAVE' ? 'Leave' : 'Absent') : (new Date(year, monthIndex, selectedDate).getDay() % 6 === 0 ? 'Weekly Off' : 'No Record'),
+        checkIn: selectedRecord?.check_in ? formatTime(selectedRecord.check_in) : '--:--',
+        checkOut: selectedRecord?.check_out ? formatTime(selectedRecord.check_out) : '--:--',
+        workingHours: selectedRecord?.worked_hours ? `${Math.floor(selectedRecord.worked_hours)}h ${String(Math.round((selectedRecord.worked_hours % 1) * 60)).padStart(2, '0')}m` : '0h 00m',
+        breakTime: selectedRecord?.check_in ? '1h 00m' : '0h 00m',
+        overtime: selectedRecord?.extra_hours ? `${Math.floor(selectedRecord.extra_hours)}h ${String(Math.round((selectedRecord.extra_hours % 1) * 60)).padStart(2, '0')}m` : '0h 00m',
+        source: selectedRecord ? 'Web Check-In' : '-',
         remarks: '-'
     };
 
@@ -232,7 +286,7 @@ export default function AttendancePage() {
                                 />
                                 <path
                                     className="text-[#0052FF]"
-                                    strokeDasharray="81, 100"
+                                    strokeDasharray={`${attendancePercentage}, 100`}
                                     strokeWidth="3.8"
                                     strokeLinecap="round"
                                     stroke="currentColor"
@@ -241,7 +295,7 @@ export default function AttendancePage() {
                                 />
                             </svg>
                             <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                                <span className="text-lg font-black text-slate-900 leading-tight">18 / 22</span>
+                                <span className="text-lg font-black text-slate-900 leading-tight">{presentDays} / {totalMonthDays}</span>
                                 <span className="text-[9px] text-slate-400 font-semibold">Days Present</span>
                             </div>
                         </div>
@@ -253,35 +307,35 @@ export default function AttendancePage() {
                                     <span className="w-2 h-2 rounded-full bg-emerald-500" />
                                     <span className="text-slate-600">Present</span>
                                 </div>
-                                <span className="font-extrabold text-slate-900">18</span>
+                                <span className="font-extrabold text-slate-900">{presentDays}</span>
                             </div>
                             <div className="flex justify-between items-center">
                                 <div className="flex items-center space-x-2">
                                     <span className="w-2 h-2 rounded-full bg-red-500" />
                                     <span className="text-slate-600">Absent</span>
                                 </div>
-                                <span className="font-extrabold text-slate-900">2</span>
+                                <span className="font-extrabold text-slate-900">{absentDays}</span>
                             </div>
                             <div className="flex justify-between items-center">
                                 <div className="flex items-center space-x-2">
                                     <span className="w-2 h-2 rounded-full bg-amber-500" />
                                     <span className="text-slate-600">Half Day</span>
                                 </div>
-                                <span className="font-extrabold text-slate-900">1</span>
+                                <span className="font-extrabold text-slate-900">{halfDays}</span>
                             </div>
                             <div className="flex justify-between items-center">
                                 <div className="flex items-center space-x-2">
                                     <span className="w-2 h-2 rounded-full bg-[#0052FF]" />
                                     <span className="text-slate-600">Leave</span>
                                 </div>
-                                <span className="font-extrabold text-slate-900">1</span>
+                                <span className="font-extrabold text-slate-900">{leaveDays}</span>
                             </div>
                             <div className="flex justify-between items-center">
                                 <div className="flex items-center space-x-2">
                                     <span className="w-2 h-2 rounded-full bg-purple-500" />
-                                    <span className="text-slate-600">Holiday</span>
+                                    <span className="text-slate-600">Weekly Off</span>
                                 </div>
-                                <span className="font-extrabold text-slate-900">0</span>
+                                <span className="font-extrabold text-slate-900">{holidayDays}</span>
                             </div>
                         </div>
                     </Card>

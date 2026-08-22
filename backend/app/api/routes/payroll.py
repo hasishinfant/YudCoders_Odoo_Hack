@@ -74,6 +74,11 @@ def get_my_salary_config(
 ) -> Any:
     emp = PayrollService.get_employee_for_user(db, current_user)
     sal = PayrollService.get_salary_config(db, emp.id)
+    if not sal:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Salary configuration not found for current user"
+        )
     return {
         "success": True,
         "data": format_salary_response(sal)
@@ -86,6 +91,11 @@ def get_employee_salary_config(
     admin_user: User = Depends(deps.require_admin)
 ) -> Any:
     sal = PayrollService.get_salary_config(db, employee_id)
+    if not sal:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Salary configuration not found for employee"
+        )
     return {
         "success": True,
         "data": format_salary_response(sal)
