@@ -85,7 +85,7 @@ export default function AttendancePage() {
                 </div>
 
                 <div class="meta-grid">
-                    <div class="meta-item">Employee Name: <strong>Kaaysha Rao</strong></div>
+                    <div class="meta-item">Employee Name: <strong>{user?.email?.split('@')[0].toUpperCase() || 'Employee'}</strong></div>
                     <div class="meta-item">Employee ID: <strong>EMP00123</strong></div>
                     <div class="meta-item">Department: <strong>Engineering</strong></div>
                     <div class="meta-item">Days Present: <strong>18 / 22 Days</strong></div>
@@ -216,7 +216,7 @@ export default function AttendancePage() {
                     {/* Attendance Overview Card with Donut Meter */}
                     <Card className="bg-white border-slate-200/80 rounded-3xl shadow-sm p-5 space-y-4 relative overflow-hidden">
                         <div className="space-y-1">
-                            <h3 className="font-extrabold text-slate-900 text-sm">Hi Kaaysha! 👋</h3>
+                            <h3 className="font-extrabold text-slate-900 text-sm">Hi there! 👋</h3>
                             <p className="text-[11px] text-slate-500 font-medium leading-snug">Here's your attendance overview for this month.</p>
                         </div>
 

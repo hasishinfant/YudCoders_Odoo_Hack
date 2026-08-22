@@ -124,7 +124,7 @@ export default function Dashboard() {
           <div className="space-y-3">
             <div className="inline-flex items-center space-x-2 bg-white/15 text-sky-100 border border-white/20 px-3.5 py-1 rounded-full text-xs font-black tracking-wider uppercase backdrop-blur-md">
               <Sparkles className="w-3.5 h-3.5 text-sky-200 animate-spin" style={{ animationDuration: '6s' }} />
-              <span>Dayflow Enterprise Hub</span>
+              <span>Enterprise HR Portal</span>
             </div>
             
             <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-white leading-snug">
@@ -260,11 +260,11 @@ export default function Dashboard() {
 
             {/* Visual Bar Chart */}
             <div className="h-44 flex items-end justify-between gap-3 pt-6 px-4 bg-sky-50/40 rounded-2xl border border-sky-100">
-              {weeklyAttendanceMock.map((bar, idx) => (
+              {weeklyBars.map((bar, idx) => (
                 <div key={idx} className="flex-1 flex flex-col items-center gap-2 h-full justify-end group">
-                  <div className="w-full max-w-[36px] bg-slate-200/80 rounded-t-xl overflow-hidden h-full flex items-end">
+                  <div className="w-full max-w-[36px] bg-slate-200/80 rounded-t-xl overflow-hidden h-full flex items-end" title={bar.hasData ? `${bar.hours}h` : 'No data'}>
                     <div 
-                      className="w-full bg-gradient-to-t from-sky-500 to-blue-600 rounded-t-xl transition-all duration-500 group-hover:from-sky-400 group-hover:to-blue-500"
+                      className={`w-full rounded-t-xl transition-all duration-500 ${bar.hasData ? 'bg-gradient-to-t from-sky-500 to-blue-600 group-hover:from-sky-400 group-hover:to-blue-500' : 'bg-slate-300/50'}`}
                       style={{ height: bar.height }}
                     />
                   </div>

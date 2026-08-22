@@ -76,7 +76,7 @@ def seed_database():
                 department_id=dept_hr.id,
                 phone="+91 98765 43210",
                 address="Koramangala, Bengaluru, Karnataka - 560034",
-                date_of_birth="20 Nov 2003",
+                date_of_birth=datetime.strptime("2003-11-20", "%Y-%m-%d").date(),
                 gender="Female",
                 marital_status="Single",
                 nationality="Indian",
@@ -108,13 +108,13 @@ def seed_database():
             employee_record = Employee(
                 user_id=emp_user.id,
                 employee_code="EMP00123",
-                first_name="Kaaysha",
-                last_name="Rao",
+                first_name="Employee",
+                last_name="User",
                 job_title="Software Engineer",
                 department_id=dept_eng.id,
                 phone="+91 98765 43210",
                 address="Koramangala, Bengaluru, Karnataka - 560034",
-                date_of_birth="20 Nov 2003",
+                date_of_birth=datetime.strptime("2003-11-20", "%Y-%m-%d").date(),
                 gender="Female",
                 marital_status="Single",
                 nationality="Indian",
@@ -129,6 +129,44 @@ def seed_database():
             print("[SUCCESS] Employee created: employee@dayflow.com / EmployeePassword123!")
         else:
             print("[INFO] Employee user employee@dayflow.com already exists.")
+
+        # 5. Seed Manav Nagpal Account
+        manav_user = db.query(User).filter(User.email == "manav.nagpal@dayflow.com").first()
+        if not manav_user:
+            manav_user = User(
+                email="manav.nagpal@dayflow.com",
+                password_hash=get_password_hash("ManavPassword123!"),
+                role="EMPLOYEE",
+                must_change_password=False,
+                active=True
+            )
+            db.add(manav_user)
+            db.commit()
+            db.refresh(manav_user)
+
+            manav_record = Employee(
+                user_id=manav_user.id,
+                employee_code="EMP00124",
+                first_name="Manav",
+                last_name="Nagpal",
+                job_title="Software Development Engineer",
+                department_id=dept_eng.id,
+                phone="+91 99999 88888",
+                address="Saket, New Delhi, Delhi - 110017",
+                date_of_birth=datetime.strptime("2002-05-12", "%Y-%m-%d").date(),
+                gender="Male",
+                marital_status="Single",
+                nationality="Indian",
+                joining_date=datetime.strptime("2025-01-10", "%Y-%m-%d").date(),
+                employment_status="ACTIVE",
+                company_name="Dayflow Inc.",
+                location="Delhi Office"
+            )
+            db.add(manav_record)
+            db.commit()
+            print("[SUCCESS] Manav Nagpal created: manav.nagpal@dayflow.com / ManavPassword123!")
+        else:
+            print("[INFO] Manav Nagpal user already exists.")
 
         print("[SUCCESS] Database seeded successfully!")
 

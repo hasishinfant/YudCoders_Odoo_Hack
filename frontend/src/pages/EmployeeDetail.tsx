@@ -98,8 +98,8 @@ export default function EmployeeDetail({ isSelfProfile = true }: EmployeeDetailP
             let payload: any = {};
             if (field === 'name') {
                 const parts = editFullName.trim().split(' ');
-                const firstName = parts[0] || 'Kaaysha';
-                const lastName = parts.slice(1).join(' ') || 'Rao';
+                const firstName = parts[0] || 'Employee';
+                const lastName = parts.slice(1).join(' ') || 'Name';
                 payload = { first_name: firstName, last_name: lastName };
             } else if (field === 'phone') {
                 payload = { phone: editPhone };
@@ -131,7 +131,7 @@ export default function EmployeeDetail({ isSelfProfile = true }: EmployeeDetailP
             full_name: `${employee.first_name} ${employee.last_name}`,
             job_title: employee.job_title || "Software Engineer",
             department: employee.department_name || "Engineering",
-            email: employee.email || "kaaysha.rao@dayflow.com",
+            email: employee.email || "employee@dayflow.com",
             phone: employee.phone || "+91 98765 43210",
             address: employee.address || "Koramangala, Bengaluru, Karnataka - 560034",
             date_of_birth: (employee as any)?.date_of_birth || "20 Nov 2003",
@@ -147,7 +147,7 @@ export default function EmployeeDetail({ isSelfProfile = true }: EmployeeDetailP
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `Dayflow_${employee.first_name || 'Kaaysha'}_${employee.employee_code || 'EMP00123'}_Data.json`;
+        a.download = `Dayflow_${employee.first_name || 'Employee'}_${employee.employee_code || 'EMP00123'}_Data.json`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -165,10 +165,10 @@ export default function EmployeeDetail({ isSelfProfile = true }: EmployeeDetailP
     }
 
     // Dynamic Database Values
-    const nameDisplay = employee ? `${employee.first_name} ${employee.last_name}` : 'Kaaysha Rao';
+    const nameDisplay = employee ? `${employee.first_name} ${employee.last_name}` : 'Employee Profile';
     const codeDisplay = employee?.employee_code || 'EMP00123';
     const titleDisplay = employee?.job_title || 'Software Engineer';
-    const emailDisplay = employee?.email || 'kaaysha.rao@dayflow.com';
+    const emailDisplay = employee?.email || 'employee@dayflow.com';
     const phoneDisplay = employee?.phone || '+91 98765 43210';
     const addressDisplay = employee?.address || 'Koramangala, Bengaluru, Karnataka - 560034';
     const deptDisplay = employee?.department_name || 'Engineering';
@@ -378,10 +378,10 @@ export default function EmployeeDetail({ isSelfProfile = true }: EmployeeDetailP
                                             background: '#0052FF',
                                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                                             fontWeight: 900, color: '#fff', fontSize: 12, flexShrink: 0,
-                                        }}>D</div>
+                                        }}>{employee?.company_name ? employee.company_name.charAt(0).toUpperCase() : 'C'}</div>
                                         <div>
-                                            <div style={{ fontWeight: 900, fontSize: 11, color: '#0f172a', lineHeight: 1.2 }}>Dayflow</div>
-                                            <div style={{ fontSize: 8, color: '#94a3b8', fontWeight: 600 }}>HR Management System</div>
+                                            <div style={{ fontWeight: 900, fontSize: 11, color: '#0f172a', lineHeight: 1.2 }}>{employee?.company_name || 'Company Name'}</div>
+                                            <div style={{ fontSize: 8, color: '#94a3b8', fontWeight: 600 }}>Employee ID Card</div>
                                         </div>
                                     </div>
 
@@ -455,57 +455,96 @@ export default function EmployeeDetail({ isSelfProfile = true }: EmployeeDetailP
                                         transform: 'rotateY(180deg)',
                                         borderRadius: '1rem',
                                         overflow: 'hidden',
-                                        background: '#0f172a',
+                                        background: 'linear-gradient(135deg, #0052FF 0%, #0041cc 100%)',
                                         border: '1px solid #1e293b',
-                                        boxShadow: '0 8px 32px rgba(0,0,0,0.30)',
+                                        boxShadow: '0 8px 32px rgba(0,0,0,0.35)',
                                         display: 'flex',
                                         flexDirection: 'column',
-                                        padding: '1rem',
-                                        gap: '0',
                                     }}
                                 >
-                                    {/* Magnetic strip */}
-                                    <div style={{ background: '#1e293b', height: 16, margin: '-1rem -1rem 12px', width: 'calc(100% + 2rem)' }} />
+                                    {/* TOP HEADER BAND */}
+                                    <div style={{
+                                        background: 'rgba(0,0,0,0.1)',
+                                        padding: '10px 14px',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'space-between',
+                                    }}>
+                                        <div>
+                                            <div style={{ color: '#fff', fontWeight: 900, fontSize: 11, letterSpacing: '0.05em' }}>{(employee?.company_name || 'Company Name').toUpperCase()}</div>
+                                            <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: 7, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Employee ID Card</div>
+                                        </div>
+                                        <div style={{
+                                            width: 26, height: 26, borderRadius: 7,
+                                            background: 'rgba(255,255,255,0.15)',
+                                            border: '1px solid rgba(255,255,255,0.25)',
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                            color: '#fff', fontWeight: 900, fontSize: 13,
+                                        }}>{employee?.company_name ? employee.company_name.charAt(0).toUpperCase() : 'C'}</div>
+                                    </div>
 
-                                    {/* QR code */}
-                                    <div style={{ textAlign:'center', marginBottom: 12 }}>
+                                    {/* QR CODE SECTION */}
+                                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '14px 14px 8px' }}>
+                                        {/* QR Box */}
                                         <div style={{
                                             background: '#fff',
-                                            borderRadius: 12,
-                                            padding: 8,
-                                            display: 'inline-block',
-                                            boxShadow: '0 2px 12px rgba(0,0,0,0.15)',
+                                            borderRadius: 10,
+                                            padding: 9,
+                                            boxShadow: '0 4px 20px rgba(0,82,255,0.25), 0 0 0 1px rgba(255,255,255,0.1)',
+                                            marginBottom: 8,
                                         }}>
-                                            <QrCode style={{ width: 48, height: 48, color: '#0f172a' }} />
+                                            <QrCode style={{ width: 58, height: 58, color: '#0f172a' }} />
                                         </div>
-                                        <div style={{ fontSize: 9, color: '#fff', fontFamily:'monospace', fontWeight:700, marginTop:6, letterSpacing:'0.1em' }}>
-                                            ID: {codeDisplay}
+
+                                        {/* Employee Code */}
+                                        <div style={{
+                                            color: '#fff', fontFamily: 'monospace', fontWeight: 900,
+                                            fontSize: 10, letterSpacing: '0.15em', marginBottom: 3,
+                                        }}>
+                                            {codeDisplay}
+                                        </div>
+                                        <div style={{
+                                            color: '#0052FF', fontSize: 7, fontWeight: 700,
+                                            textTransform: 'uppercase', letterSpacing: '0.12em',
+                                            background: 'rgba(0,82,255,0.12)',
+                                            padding: '2px 8px', borderRadius: 20,
+                                        }}>
+                                            SCAN TO VERIFY IDENTITY
                                         </div>
                                     </div>
 
-                                    {/* Emergency info */}
-                                    <div style={{ borderTop:'1px solid #1e293b', paddingTop:8, flex:1, display:'flex', flexDirection:'column', gap:5 }}>
-                                        <div style={{ fontSize: 8, color: '#cbd5e1' }}>
-                                            <span style={{ color:'#fff', fontWeight:700 }}>Emergency Contact: </span>+91 98765 00000
-                                        </div>
-                                        <div style={{ fontSize: 8, color: '#cbd5e1' }}>
-                                            <span style={{ color:'#fff', fontWeight:700 }}>Issue Date: </span>15 Aug 2023
-                                        </div>
-                                        <div style={{ fontSize: 7, color: '#64748b', fontStyle:'italic', marginTop:4, lineHeight:1.4 }}>
-                                            Property of Dayflow Inc. If found, please return to HR Department.
-                                        </div>
+                                    {/* DIVIDER */}
+                                    <div style={{ height: 1, background: 'linear-gradient(90deg, transparent, #1e40af, transparent)', margin: '0 14px' }} />
+
+                                    {/* INFO ROWS */}
+                                    <div style={{ padding: '8px 14px', display: 'flex', flexDirection: 'column', gap: 5 }}>
+                                        {[
+                                            { icon: '🪪', label: 'Employee ID', value: codeDisplay },
+                                            { icon: '📅', label: 'Date of Joining', value: employee?.joining_date ? new Date(employee.joining_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '15 Aug 2023' },
+                                            { icon: '🏢', label: 'Company', value: employee?.company_name || 'Company Name' },
+                                        ].map(row => (
+                                            <div key={row.label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 4 }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: 4, minWidth: 0 }}>
+                                                    <span style={{ fontSize: 9 }}>{row.icon}</span>
+                                                    <span style={{ fontSize: 8, color: '#94a3b8', fontWeight: 600, flexShrink: 0 }}>{row.label}</span>
+                                                </div>
+                                                <span style={{ fontSize: 8, color: '#f1f5f9', fontWeight: 800, fontFamily: 'monospace', textAlign: 'right', maxWidth: '55%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                    {row.value}
+                                                </span>
+                                            </div>
+                                        ))}
                                     </div>
 
-                                    {/* Authorization seal */}
+                                    {/* AUTHORIZED FOOTER BAR */}
                                     <div style={{
-                                        borderTop: '1px solid #1e293b',
-                                        paddingTop: 8,
-                                        display: 'flex', alignItems:'center', justifyContent:'center', gap:4,
-                                        color: '#0052FF', fontSize: 8, fontWeight: 900,
-                                        textTransform: 'uppercase', letterSpacing: '0.15em',
+                                        background: 'linear-gradient(135deg, #FF9500 0%, #e07c00 100%)',
+                                        padding: '7px 14px',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
                                     }}>
-                                        <CheckCircle2 style={{ width:12, height:12, color:'#0052FF' }} />
-                                        <span>Authorized ID Card</span>
+                                        <CheckCircle2 style={{ width: 11, height: 11, color: '#fff' }} />
+                                        <span style={{ color: '#fff', fontSize: 8, fontWeight: 900, letterSpacing: '0.18em', textTransform: 'uppercase' }}>
+                                            Authorized Employee
+                                        </span>
                                     </div>
                                 </div>
                             </div>
@@ -817,7 +856,7 @@ export default function EmployeeDetail({ isSelfProfile = true }: EmployeeDetailP
                                     <div className="w-6 h-6 rounded-full bg-red-50 text-red-600 font-bold flex items-center justify-center text-[10px]">G</div>
                                     <div>
                                         <span className="font-bold text-slate-900 block leading-tight">Google</span>
-                                        <span className="text-[10px] text-slate-400 font-medium">kaaysha.rao@gmail.com</span>
+                                        <span className="text-[10px] text-slate-400 font-medium">connected@gmail.com</span>
                                     </div>
                                 </div>
                                 <span className="bg-emerald-100 text-emerald-800 text-[10px] font-extrabold px-2 py-0.5 rounded-full flex items-center">
@@ -831,7 +870,7 @@ export default function EmployeeDetail({ isSelfProfile = true }: EmployeeDetailP
                                     <div className="w-6 h-6 rounded-full bg-blue-50 text-[#0052FF] font-bold flex items-center justify-center text-[10px]">M</div>
                                     <div>
                                         <span className="font-bold text-slate-900 block leading-tight">Microsoft</span>
-                                        <span className="text-[10px] text-slate-400 font-medium">kaaysha.rao@outlook.com</span>
+                                        <span className="text-[10px] text-slate-400 font-medium">connected@outlook.com</span>
                                     </div>
                                 </div>
                                 <span className="bg-emerald-100 text-emerald-800 text-[10px] font-extrabold px-2 py-0.5 rounded-full flex items-center">

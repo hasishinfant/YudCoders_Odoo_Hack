@@ -38,7 +38,7 @@ export default function MainLayout() {
     navigate('/login');
   };
 
-  const navItems = [
+  const allNavItems = [
     { path: '/', label: 'Dashboard', icon: LayoutDashboard },
     { path: '/profile', label: 'My Profile', icon: User },
     { path: '/attendance', label: 'Attendance', icon: Clock },
@@ -47,11 +47,15 @@ export default function MainLayout() {
     { path: '/documents', label: 'Documents', icon: Folder },
     { path: '/calendar', label: 'Calendar', icon: Calendar },
     { path: '/performance', label: 'Performance', icon: Award },
-    { path: '/reports', label: 'Reports & Analytics', icon: BarChart3 },
     { path: '/announcements', label: 'Announcements', icon: Megaphone, dotBadge: true },
     { path: '/help', label: 'Help & Support', icon: HelpCircle },
-    { path: '/settings', label: 'Settings', icon: Settings }
+    { path: '/settings', label: 'Settings', icon: Settings },
+    // Admin-only items
+    { path: '/employees', label: 'Employees', icon: User, adminOnly: true },
+    { path: '/reports', label: 'Reports & Analytics', icon: BarChart3, adminOnly: true },
   ];
+
+  const navItems = allNavItems.filter(item => !item.adminOnly || user?.role === 'ADMIN');
 
   return (
     <div className="flex min-h-screen bg-[#F4F7FC] font-sans antialiased text-slate-900">
@@ -81,7 +85,7 @@ export default function MainLayout() {
                 </svg>
               </div>
               <div>
-                <span className="text-xl font-extrabold text-slate-900 tracking-tight block leading-tight">Dayflow</span>
+                <span className="text-xl font-extrabold text-slate-900 tracking-tight block leading-tight">{(user as any)?.company_name || 'HR Portal'}</span>
                 <span className="text-[10px] text-slate-400 font-semibold tracking-wider block">HR Management System</span>
                 <span className={`inline-block text-[8px] font-black tracking-wider uppercase px-2 py-0.5 mt-1 rounded-full ${
                   user?.role === 'ADMIN' ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-[#0052FF]'
@@ -239,7 +243,7 @@ export default function MainLayout() {
                 </div>
 
                  <div className="hidden md:block">
-                  <span className="text-xs font-bold text-slate-900 block leading-tight font-black">Kaaysha Rao</span>
+                  <span className="text-xs font-bold text-slate-900 block leading-tight font-black">{user?.email?.split('@')[0].toUpperCase() || 'USER'}</span>
                   <div className="flex items-center space-x-1.5 mt-0.5">
                     <span className="text-[9px] text-slate-500 font-mono font-bold">EMP00123</span>
                     <span className="text-[9px] text-slate-300">•</span>
